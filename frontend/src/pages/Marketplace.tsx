@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Clock, MapPin, TrendingUp, Plus, Gavel, Filter, Search, BarChart3, Users, DollarSign } from 'lucide-react';
+import { Clock, MapPin, TrendingUp, Plus, Gavel, Filter, Search, BarChart3, Users } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import AddCropModal from '../components/AddCropModal';
 import BidModal from '../components/BidModal';
+import CropImage from '../components/CropImage';
 
 // Custom Rupee Icon Component
 const RupeeIcon = ({ className }: { className?: string }) => (
@@ -186,10 +187,11 @@ const Marketplace: React.FC = () => {
           {filteredCrops.map((crop) => (
             <div key={crop.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               <div className="relative">
-                <img
+                <CropImage
                   src={crop.imageUrl}
                   alt={crop.name}
                   className="w-full h-48 object-cover"
+                  fallbackSrc="/images/crops/Wheat.jpg"
                 />
                 <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
                   crop.status === 'active' ? 'bg-green-600 text-white' :

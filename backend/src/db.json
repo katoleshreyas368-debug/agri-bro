@@ -1,0 +1,345 @@
+{
+  "users": [
+    {
+      "id": "mgigcpyoxu6thi",
+      "name": "Smoke Farmer",
+      "phone": "9999900001",
+      "location": "TestFarm",
+      "type": "farmer"
+    },
+    {
+      "id": "mgigcpytkckgim",
+      "name": "Smoke Buyer",
+      "phone": "9999900002",
+      "location": "TestMarket",
+      "type": "buyer"
+    },
+    {
+      "id": "mgigpryfao86ta",
+      "name": "Smoke Farmer Script",
+      "phone": "9000000001",
+      "location": "Farm",
+      "type": "farmer"
+    },
+    {
+      "id": "mgigpryo6lvqiq",
+      "name": "Smoke Buyer Script",
+      "phone": "9000000002",
+      "location": "Market",
+      "type": "buyer"
+    },
+    {
+      "id": "mgihc0972s9qor",
+      "name": "Test User",
+      "phone": "000-TEST-USER",
+      "location": "Test land",
+      "type": "farmer"
+    },
+    {
+      "id": "mgihfgue5lmun7",
+      "name": "Crop Tester",
+      "phone": "000-CROP",
+      "location": "Farm",
+      "type": "farmer"
+    },
+    {
+      "id": "mgihin6wy7fy42",
+      "name": "ForumUser",
+      "phone": "000-FORUM",
+      "location": "",
+      "type": "farmer"
+    },
+    {
+      "id": "mgihinbyk4jgaf",
+      "name": "LogUser",
+      "phone": "000-LOG",
+      "location": "",
+      "type": "farmer"
+    }
+  ],
+  "crops": [
+    {
+      "id": "mgihomiuiyt3oc",
+      "name": "Test Corn",
+      "quantity": 10,
+      "unit": "quintals",
+      "basePrice": 1000,
+      "currentBid": 1100,
+      "farmerId": "mgihfgue5lmun7",
+      "farmerName": "Crop Tester",
+      "location": "",
+      "imageUrl": "/images/crops/default.jpg",
+      "bids": [
+        {
+          "id": "mgihomj1nvc2zc",
+          "buyerId": "buyer-1",
+          "buyerName": "Buyer One",
+          "amount": 1100,
+          "timestamp": "2025-10-08T21:17:01.069Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-15T21:17:01.062Z"
+    },
+    {
+      "id": "mgihjviyfyiu4v",
+      "name": "Test Corn",
+      "quantity": 10,
+      "unit": "quintals",
+      "basePrice": 1000,
+      "currentBid": 1100,
+      "farmerId": "mgihfgue5lmun7",
+      "farmerName": "Crop Tester",
+      "location": "",
+      "imageUrl": "/images/crops/default.jpg",
+      "bids": [
+        {
+          "id": "mgihjvj5rfmvct",
+          "buyerId": "buyer-1",
+          "buyerName": "Buyer One",
+          "amount": 1100,
+          "timestamp": "2025-10-08T21:13:19.457Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-15T21:13:19.450Z"
+    },
+    {
+      "id": "mgihingogab7l0",
+      "name": "Test Corn",
+      "quantity": 10,
+      "unit": "quintals",
+      "basePrice": 1000,
+      "currentBid": 1100,
+      "farmerId": "mgihfgue5lmun7",
+      "farmerName": "Crop Tester",
+      "location": "",
+      "imageUrl": "/images/crops/default.jpg",
+      "bids": [
+        {
+          "id": "mgihingui2ij6z",
+          "buyerId": "buyer-1",
+          "buyerName": "Buyer One",
+          "amount": 1100,
+          "timestamp": "2025-10-08T21:12:22.350Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-15T21:12:22.344Z"
+    },
+    {
+      "id": "mgihfgurvjba2w",
+      "name": "Test Corn",
+      "quantity": 10,
+      "unit": "quintals",
+      "basePrice": 1000,
+      "currentBid": 1100,
+      "farmerId": "mgihfgue5lmun7",
+      "farmerName": "Crop Tester",
+      "location": "",
+      "imageUrl": "/images/crops/default.jpg",
+      "bids": [
+        {
+          "id": "mgihfguyrdwwcb",
+          "buyerId": "buyer-1",
+          "buyerName": "Buyer One",
+          "amount": 1100,
+          "timestamp": "2025-10-08T21:09:53.818Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-15T21:09:53.811Z"
+    },
+    {
+      "id": "mgigpryy4ziwo7",
+      "name": "SmokeTest Crop",
+      "quantity": 7,
+      "unit": "quintals",
+      "basePrice": 1200,
+      "currentBid": 1300,
+      "farmerId": "mgigpryfao86ta",
+      "farmerName": "Smoke Farmer Script",
+      "location": "TestRegion",
+      "imageUrl": "/images/crops/Corn.jpg",
+      "bids": [
+        {
+          "id": "mgigprz4tvp3jp",
+          "buyerId": "mgigpryo6lvqiq",
+          "buyerName": "Smoke Buyer Script",
+          "amount": 1300,
+          "timestamp": "2025-10-08T20:49:55.168Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-11T20:49:55.158Z"
+    },
+    {
+      "id": "mgigcpzbez1tcq",
+      "name": "Test Corn",
+      "quantity": 10,
+      "unit": "quintals",
+      "basePrice": 1500,
+      "currentBid": 1600,
+      "farmerId": "mgigcpyoxu6thi",
+      "farmerName": "Smoke Farmer",
+      "location": "TestRegion",
+      "imageUrl": "/images/crops/Corn.jpg",
+      "bids": [
+        {
+          "id": "mgigcpzj5cks2g",
+          "buyerId": "mgigcpytkckgim",
+          "buyerName": "Smoke Buyer",
+          "amount": 1600,
+          "timestamp": "2025-10-08T20:39:46.063Z"
+        }
+      ],
+      "status": "active",
+      "endTime": "2025-10-12T02:09:46.0502913+05:30"
+    }
+  ],
+  "inputs": [],
+  "logistics": [
+    {
+      "id": "mgihomtsk0cv7n",
+      "farmerId": "mgihinbyk4jgaf",
+      "farmerName": "LogUser",
+      "cropType": "Wheat",
+      "quantity": 50,
+      "fromLocation": "Farm",
+      "toLocation": "Market",
+      "status": "pending",
+      "requestedDate": "2025-10-08T21:17:01.456Z"
+    },
+    {
+      "id": "mgihjvetq2szbt",
+      "farmerId": "mgihinbyk4jgaf",
+      "farmerName": "LogUser",
+      "cropType": "Wheat",
+      "quantity": 50,
+      "fromLocation": "Farm",
+      "toLocation": "Market",
+      "status": "pending",
+      "requestedDate": "2025-10-08T21:13:19.301Z"
+    },
+    {
+      "id": "mgihinc7xd1nch",
+      "farmerId": "mgihinbyk4jgaf",
+      "farmerName": "LogUser",
+      "cropType": "Wheat",
+      "quantity": 50,
+      "fromLocation": "Farm",
+      "toLocation": "Market",
+      "status": "pending",
+      "requestedDate": "2025-10-08T21:12:22.183Z"
+    },
+    {
+      "id": "mgigprzrik61bj",
+      "farmerId": "mgigpryfao86ta",
+      "farmerName": "Smoke Farmer Script",
+      "cropType": "SmokeTest Crop",
+      "quantity": 2,
+      "fromLocation": "Farm",
+      "toLocation": "Market",
+      "status": "pending",
+      "requestedDate": "2025-10-08T20:49:55.189Z"
+    },
+    {
+      "id": "mgigcq015wexop",
+      "farmerId": "mgigcpyoxu6thi",
+      "farmerName": "Smoke Farmer",
+      "cropType": "Test Corn",
+      "quantity": 5,
+      "fromLocation": "TestFarm",
+      "toLocation": "Market",
+      "status": "pending",
+      "requestedDate": "2025-10-09T02:09:46.0772812+05:30"
+    }
+  ],
+  "community": [
+    {
+      "id": "mgihomcpikk0ih",
+      "authorId": "mgihin6wy7fy42",
+      "authorName": "ForumUser",
+      "title": "Hello",
+      "content": "Hello world",
+      "timestamp": "2025-10-08T21:17:00.841Z",
+      "replies": [
+        {
+          "id": "mgihomd4ms9tdu",
+          "authorId": "mgihin6wy7fy42",
+          "authorName": "ForumUser",
+          "content": "Thanks!",
+          "timestamp": "2025-10-08T21:17:00.856Z"
+        }
+      ]
+    },
+    {
+      "id": "mgihjvai7i2qai",
+      "authorId": "mgihin6wy7fy42",
+      "authorName": "ForumUser",
+      "title": "Hello",
+      "content": "Hello world",
+      "timestamp": "2025-10-08T21:13:19.146Z",
+      "replies": [
+        {
+          "id": "mgihjvav3x3mxl",
+          "authorId": "mgihin6wy7fy42",
+          "authorName": "ForumUser",
+          "content": "Thanks!",
+          "timestamp": "2025-10-08T21:13:19.159Z"
+        }
+      ]
+    },
+    {
+      "id": "mgihin7adspbcm",
+      "authorId": "mgihin6wy7fy42",
+      "authorName": "ForumUser",
+      "title": "Hello",
+      "content": "Hello world",
+      "timestamp": "2025-10-08T21:12:22.006Z",
+      "replies": [
+        {
+          "id": "mgihin7jvps123",
+          "authorId": "mgihin6wy7fy42",
+          "authorName": "ForumUser",
+          "content": "Thanks!",
+          "timestamp": "2025-10-08T21:12:22.015Z"
+        }
+      ]
+    },
+    {
+      "id": "mgigprzdt6clkj",
+      "authorId": "mgigpryfao86ta",
+      "authorName": "Smoke Farmer Script",
+      "title": "SmokeScript",
+      "content": "Hello from smoke script",
+      "timestamp": "2025-10-08T20:49:55.177Z",
+      "replies": [
+        {
+          "id": "mgigprzkhx7fzu",
+          "authorId": "mgigpryo6lvqiq",
+          "authorName": "Smoke Buyer Script",
+          "content": "Thanks",
+          "timestamp": "2025-10-08T20:49:55.184Z"
+        }
+      ]
+    },
+    {
+      "id": "mgigcpzrvw111j",
+      "authorId": "mgigcpyoxu6thi",
+      "authorName": "Smoke Farmer",
+      "title": "Smoke Test Post",
+      "content": "Hello community from smoke test",
+      "timestamp": "2025-10-08T20:39:46.071Z",
+      "replies": [
+        {
+          "id": "mgigcpzu8fzoqw",
+          "authorId": "mgigcpytkckgim",
+          "authorName": "Smoke Buyer",
+          "content": "Thanks for the post",
+          "timestamp": "2025-10-08T20:39:46.074Z"
+        }
+      ]
+    }
+  ]
+}

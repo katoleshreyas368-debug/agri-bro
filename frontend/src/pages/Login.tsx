@@ -13,8 +13,13 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
     const user = {
       id: Date.now().toString(),
       name: formData.name,
@@ -22,8 +27,15 @@ const Login: React.FC = () => {
       location: formData.location,
       type: formData.userType
     };
-    login(user);
-    navigate('/dashboard');
+    try {
+      await login(user);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to login. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -127,15 +139,18 @@ const Login: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+            disabled={loading}
+            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Join AGRIBro
+            {loading ? 'Joining...' : 'Join AGRIBro'}
           </button>
 
           <div className="text-center">
-            <p className="text-sm text-gray-600">
-              By joining, you agree to our Terms of Service and Privacy Policy
-            </p>
+            {error ? (
+              <p className="text-sm text-red-600">{error}</p>
+            ) : (
+              <p className="text-sm text-gray-600">By joining, you agree to our Terms of Service and Privacy Policy</p>
+            )}
           </div>
         </form>
       </div>

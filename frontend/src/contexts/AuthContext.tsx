@@ -27,9 +27,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('agribro_user', JSON.stringify(userData));
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+
+  const login = async (userData: User) => {
+    // Send to backend to create or fetch user
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      if (!res.ok) throw new Error('Failed to login');
+      const { user } = await res.json();
+      setUser(user);
+      localStorage.setItem('agribro_user', JSON.stringify(user));
+      return user;
+    } catch (err) {
+      console.error('Login error', err);
+      throw err;
+    }
   };
 
   const logout = () => {

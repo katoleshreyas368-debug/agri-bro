@@ -54,10 +54,10 @@ const Landing: React.FC = () => {
       {/* Hero Section */}
       <section className="relative z-20 flex flex-col items-center justify-center text-center pt-32 pb-16">
         <p className="text-green-200 text-lg mb-4">
-          # Learned from the Past, Reshaping the Future, doing with a Stable & Secure Present
+          Get personalized crop recommendations, real-time weather insights, market analysis, and a dedicated marketplace tailored to your farm's unique conditions.
         </p>
         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 max-w-3xl">
-          Phenomenal opportunities in Agri Sector
+          Smart Decisions for Better Harvests
         </h1>
         <div className="flex gap-4 mt-4">
           <a
@@ -70,7 +70,7 @@ const Landing: React.FC = () => {
             href="#"
             className="bg-green-500 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-green-600 transition"
           >
-            Apply Now
+            Sign up now
           </a>
         </div>
       </section>
