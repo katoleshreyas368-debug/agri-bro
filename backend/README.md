@@ -48,7 +48,7 @@ cd "c:\Users\ShreyashK\Desktop\Final_Project - Copy\project\backend"
 npm install
 npm run dev
 
-The server will start on http://localhost:4000
+The server will start on http://localhost:5001
 
  Available endpoints (basic):
  - GET  /crops

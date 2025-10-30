@@ -18,10 +18,8 @@ const Logistics: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
+    // The backend will get the farmerId and farmerName from the auth middleware
     addLogisticsRequest({
-      farmerId: user.id,
-      farmerName: user.name,
       cropType: formData.cropType,
       quantity: parseInt(formData.quantity),
       fromLocation: formData.fromLocation,

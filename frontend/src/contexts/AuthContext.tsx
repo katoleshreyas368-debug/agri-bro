@@ -10,7 +10,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
+  token: string | null;
+  login: (user: Omit<User, 'id'>) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -19,17 +20,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('agribro_user');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('agribro_token');
+    if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
+      setToken(savedToken);
     }
   }, []);
 
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5001'; // Standardized port
 
-  const login = async (userData: User) => {
+  const login = async (userData: Omit<User, 'id'>) => {
     // Send to backend to create or fetch user
     try {
       const res = await fetch(`${API}/auth/login`, {
@@ -38,9 +42,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify(userData)
       });
       if (!res.ok) throw new Error('Failed to login');
-      const { user } = await res.json();
+      const { user, token } = await res.json();
       setUser(user);
+      setToken(token);
       localStorage.setItem('agribro_user', JSON.stringify(user));
+      localStorage.setItem('agribro_token', token);
       return user;
     } catch (err) {
       console.error('Login error', err);
@@ -50,14 +56,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('agribro_user');
+    localStorage.removeItem('agribro_token');
   };
 
   return (
     <AuthContext.Provider value={{ 
       user, 
       login, 
-      logout, 
+      logout,
+      token,
       isAuthenticated: !!user 
     }}>
       {children}

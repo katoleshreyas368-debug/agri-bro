@@ -1,13 +1,30 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Package, Truck, Shield } from 'lucide-react';
+import { ShoppingCart, Package, Truck, Shield, Search, Filter, BarChart3, TrendingUp, AlertTriangle, X, Plus } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
+import AddInputModal from '../components/AddInputModal';
+
+interface InputItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  unit: string;
+  imageUrl: string;
+  vendorName: string;
+  inStock: boolean;
+  stockQuantity?: number;
+}
 
 const InputStore: React.FC = () => {
-  const { inputItems } = useData();
-  const { isAuthenticated } = useAuth();
+  const { inputItems, error, clearError } = useData();
+  const { isAuthenticated, user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [showAddInput, setShowAddInput] = useState(false);
   const [cart, setCart] = useState<Array<{ id: string; quantity: number }>>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'price' | 'name' | 'stock'>('price');
 
   const categories = [
     { value: 'all', label: 'All Products' },
@@ -16,9 +33,28 @@ const InputStore: React.FC = () => {
     { value: 'pesticides', label: 'Pesticides' }
   ];
 
-  const filteredItems = selectedCategory === 'all' 
-    ? inputItems 
-    : inputItems.filter(item => item.category === selectedCategory);
+  // No need for unused statistics variables
+
+  // Filter and sort items
+  const filteredItems = inputItems
+    .filter(item => {
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          item.vendorName.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'price':
+          return a.price - b.price;
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'stock':
+          return Number(b.inStock) - Number(a.inStock);
+        default:
+          return a.price - b.price;
+      }
+    });
 
   const addToCart = (itemId: string) => {
     setCart(prev => {
@@ -44,12 +80,81 @@ const InputStore: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Global Error Banner */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 flex justify-between items-center shadow-md">
+            <div className="flex items-center">
+              <AlertTriangle className="h-6 w-6 mr-3" />
+              <div>
+                <p className="font-bold">An error occurred</p>
+                <p>{error}</p>
+              </div>
+            </div>
+            <button onClick={clearError} className="text-red-500 hover:text-red-700">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Input Procurement Hub</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Get certified seeds, fertilizers, and agrochemicals delivered to your doorstep
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div className="text-center sm:text-left">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Input Procurement Hub</h1>
+            <p className="text-gray-600 max-w-2xl">
+              Get certified seeds, fertilizers, and agrochemicals delivered to your doorstep
+            </p>
+          </div>
+          {isAuthenticated && user?.type === 'vendor' && (
+            <button
+              onClick={() => setShowAddInput(true)}
+              className="mt-4 sm:mt-0 bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center"
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              Add New Product
+            </button>
+          )}
+        </div>
+
+        {/* Market Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex items-center">
+              <BarChart3 className="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <p className="text-sm text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900">{inputItems.length}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-green-600 mr-3" />
+              <div>
+                <p className="text-sm text-gray-600">Available Items</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {inputItems.filter(item => item.inStock).length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-purple-600 mr-3" />
+              <div>
+                <p className="text-sm text-gray-600">Categories</p>
+                <p className="text-2xl font-bold text-gray-900">{categories.length - 1}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex items-center">
+              <ShoppingCart className="h-8 w-8 text-yellow-600 mr-3" />
+              <div>
+                <p className="text-sm text-gray-600">Cart Items</p>
+                <p className="text-2xl font-bold text-gray-900">{cart.length}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Features */}
@@ -84,21 +189,53 @@ const InputStore: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          {categories.map(category => (
-            <button
-              key={category.value}
-              onClick={() => setSelectedCategory(category.value)}
-              className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                selectedCategory === category.value
-                  ? 'bg-green-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-green-50 border border-gray-200'
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search products or vendors..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-500" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                {categories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="price">Price</option>
+                <option value="name">Name</option>
+                <option value="stock">Stock Level</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Products Grid */}
@@ -159,6 +296,11 @@ const InputStore: React.FC = () => {
             <h3 className="text-xl font-medium text-gray-900 mb-2">No Products Found</h3>
             <p className="text-gray-600">Try selecting a different category</p>
           </div>
+        )}
+
+        {/* Add Input Modal */}
+        {showAddInput && (
+          <AddInputModal onClose={() => setShowAddInput(false)} />
         )}
       </div>
     </div>

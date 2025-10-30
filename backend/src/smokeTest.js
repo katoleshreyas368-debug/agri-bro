@@ -1,6 +1,7 @@
 const axios = require('axios');
 
-const API = process.env.API || process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:5001';
+// Choose API in order: explicit API env var, then PORT env var, then default to 4000 for local dev
+const API = process.env.API ? process.env.API : (process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:4000');
 
 async function run() {
   console.log('API:', API);

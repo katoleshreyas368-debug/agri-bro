@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { readDB, writeDB, makeId, isMongoEnabled, mongoFindOne, mongoInsertOne, mongoFind } = require('../db');
+const { requireAuth } = require('../middleware'); // requireAuth is used for /profile
 
 // Simple login/register that stores user in JSON
 router.post('/login', async (req, res) => {
@@ -12,10 +13,40 @@ router.post('/login', async (req, res) => {
     if (await isMongoEnabled()) {
       let user = await mongoFindOne('users', { phone });
       if (!user) {
-        user = { id: makeId(), name, phone, location: location || '', type: type || 'farmer' };
+        // Some deployments have a unique index on `uid` (not `id`).
+        // To avoid duplicate-key errors when that index exists and allows
+        // no-null values, populate both `id` and `uid` with the same value.
+        const genId = makeId();
+        // Avoid inserting a plain string into `location` when the MongoDB
+        // collection has a geospatial index on `location` (it expects an
+        // array or GeoJSON object). Store free-text locations under
+        // `locationName` and only set `location` when the input looks
+        // like coordinates/object.
+        const mongoDoc = { id: genId, uid: genId, name, phone, type: type || 'farmer' };
+        // Ensure email is non-null to avoid unique-index conflicts when
+        // the collection has a unique index on `email` which treats
+        // missing fields as null. If client did not provide email,
+        // create a unique placeholder email using the generated id.
+        if (req.body && req.body.email && typeof req.body.email === 'string' && req.body.email.trim()) {
+          mongoDoc.email = req.body.email.trim();
+        } else {
+          mongoDoc.email = `${genId}@no-email.agribro.local`;
+        }
+        if (location) {
+          if (typeof location === 'string') {
+            mongoDoc.locationName = location;
+          } else if (Array.isArray(location) || typeof location === 'object') {
+            // assume caller provided valid geo coordinates/GeoJSON
+            mongoDoc.location = location;
+          }
+        }
+        user = mongoDoc;
         await mongoInsertOne('users', user);
       }
-      return res.json({ user });
+      // Normalize response so callers still see a `location` string
+      const respUser = Object.assign({}, user);
+      respUser.location = user.locationName || user.location || '';
+      return res.json({ user: respUser, token: respUser.id }); // Return user.id as a simple token
     }
 
     const db = await readDB();
@@ -33,7 +64,7 @@ router.post('/login', async (req, res) => {
       await writeDB(db);
     }
 
-    res.json({ user });
+    res.json({ user, token: user.id }); // Return user.id as a simple token
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'internal_server_error' });
@@ -72,6 +103,12 @@ router.get('/users', async (req, res) => {
     console.error('Get users error:', err);
     res.status(500).json({ error: 'internal_server_error' });
   }
+});
+
+// GET /auth/profile - get current user's profile
+router.get('/profile', requireAuth, (req, res) => {
+  // req.user is attached by the requireAuth middleware
+  res.json({ user: req.user });
 });
 
 module.exports = router;

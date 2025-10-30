@@ -20,15 +20,15 @@ const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const user = {
-      id: Date.now().toString(),
+    // We only send the data for creation. The backend will create the user with an ID.
+    const userPayload = {
       name: formData.name,
       phone: formData.phone,
       location: formData.location,
       type: formData.userType
     };
     try {
-      await login(user);
+      await login(userPayload);
       navigate('/dashboard');
     } catch (err) {
       console.error(err);

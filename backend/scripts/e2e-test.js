@@ -4,25 +4,24 @@ const base = 'http://127.0.0.1:5001';
 
 async function run() {
   try {
+    // To run this test, we need an authenticated user. We'll log in to create one.
+    const loginRes = await axios.post(base + '/auth/login', { name: 'E2E User', phone: '9000000003' });
+    const token = loginRes.data.token;
+    const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+
     console.log('Creating crop...');
     const createRes = await axios.post(base + '/crops', {
       name: 'E2E Test Crop',
       quantity: 5,
       unit: 'quintals',
       basePrice: 500,
-      farmerId: 'e2e-farmer-1',
-      farmerName: 'E2E Farmer',
       imageUrl: '/images/crops/default.jpg'
-    });
+    }, authHeaders);
     console.log('Created:', createRes.status, createRes.data.id || createRes.data._id || createRes.data);
 
     const cropId = createRes.data.id || createRes.data._id;
     console.log('Placing bid...');
-    const bidRes = await axios.post(`${base}/crops/${cropId}/bids`, {
-      buyerId: 'e2e-buyer-1',
-      buyerName: 'E2E Buyer',
-      amount: 600
-    });
+    const bidRes = await axios.post(`${base}/crops/${cropId}/bids`, { amount: 600 }, authHeaders);
     console.log('Bid placed:', bidRes.status, bidRes.data);
 
     console.log('Fetching crops to verify...');

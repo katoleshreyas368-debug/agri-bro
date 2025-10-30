@@ -11,6 +11,7 @@ import Logistics from './pages/Logistics';
 import Community from './pages/Community';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import ImageUpload from "./components/ImageUpload";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,6 +33,7 @@ function App() {
               <Route path="/community" element={<Community />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/upload" element={<ImageUpload />} />
             </Routes>
           </div>
         </Router>

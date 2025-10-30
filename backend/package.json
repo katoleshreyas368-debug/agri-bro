@@ -4,25 +4,29 @@
   "private": true,
   "main": "src/index.js",
   "scripts": {
-    "dev": "cross-env PORT=5001 nodemon src/index.js",
+    "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "smoke": "node src/smokeTest.js",
     "test": "jest --runInBand",
     "import-to-mongo": "node scripts/import-to-mongo.js",
-    "check-mongo": "node -r dotenv/config scripts/check-mongo.js"
-    ,"cleanup-e2e": "node -r dotenv/config scripts/cleanup-e2e.js"
+    "check-mongo": "node -r dotenv/config scripts/check-mongo.js",
+    "cleanup-e2e": "node -r dotenv/config scripts/cleanup-e2e.js"
   },
   "dependencies": {
-    "axios": "^1.6.4",
+    "axios": "^1.6.0",
+    "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
-    "dotenv": "^16.3.1",
-    "mongodb": "^5.6.0"
+    "mongodb": "^5.9.0",
+    "mongoose": "^7.6.3",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
-    "nodemon": "^2.0.22",
     "jest": "^29.6.1",
+    "nodemon": "^2.0.22",
     "supertest": "^6.3.3"
   }
 }

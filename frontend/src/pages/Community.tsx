@@ -14,10 +14,8 @@ const Community: React.FC = () => {
   const handleSubmitPost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-
+    // The backend will get the author from the auth middleware
     addCommunityPost({
-      authorId: user.id,
-      authorName: user.name,
       title: newPostData.title,
       content: newPostData.content
     });
@@ -29,10 +27,8 @@ const Community: React.FC = () => {
   const handleSubmitReply = (e: React.FormEvent, postId: string) => {
     e.preventDefault();
     if (!user || !replyContent.trim()) return;
-
+    // The backend will get the author from the auth middleware
     addReply(postId, {
-      authorId: user.id,
-      authorName: user.name,
       content: replyContent
     });
 
@@ -209,13 +205,12 @@ const Community: React.FC = () => {
 
                     {/* Reply Form */}
                     {isAuthenticated && (
-                      <form onSubmit={(e) => handleSubmitReply(e, post.id)} className="flex space-x-3">
+                      <form onSubmit={(e) => handleSubmitReply(e, post.id)} className="flex items-start space-x-3">
                         <textarea
                           value={replyContent}
                           onChange={(e) => setReplyContent(e.target.value)}
                           placeholder="Write your reply..."
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-                          rows={3}
                         />
                         <button
                           type="submit"

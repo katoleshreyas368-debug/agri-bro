@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, MapPin, TrendingUp, Plus, Gavel, Filter, Search, BarChart3, Users } from 'lucide-react';
+import { Clock, MapPin, TrendingUp, Plus, Gavel, Filter, Search, BarChart3, Users, AlertTriangle, X } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import AddCropModal from '../components/AddCropModal';
@@ -25,7 +25,7 @@ const RupeeIcon = ({ className }: { className?: string }) => (
 );
 
 const Marketplace: React.FC = () => {
-  const { crops } = useData();
+  const { crops, error, clearError } = useData();
   const { user, isAuthenticated } = useAuth();
   const [showAddCrop, setShowAddCrop] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
@@ -77,6 +77,21 @@ const Marketplace: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Global Error Banner */}
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6 flex justify-between items-center shadow-md">
+            <div className="flex items-center">
+              <AlertTriangle className="h-6 w-6 mr-3" />
+              <div>
+                <p className="font-bold">An error occurred</p>
+                <p>{error}</p>
+              </div>
+            </div>
+            <button onClick={clearError} className="text-red-500 hover:text-red-700">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>

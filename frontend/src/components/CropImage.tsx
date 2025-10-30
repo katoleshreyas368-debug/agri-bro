@@ -14,6 +14,7 @@ const CropImage: React.FC<CropImageProps> = ({
   fallbackSrc 
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
+
   const [hasError, setHasError] = useState(false);
 
   const handleError = () => {
