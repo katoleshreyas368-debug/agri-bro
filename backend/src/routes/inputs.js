@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { readDB, isMongoEnabled, mongoFind, mongoInsert, mongoUpdate, mongoDelete } = require('../db');
+const { readDB, writeDB, isMongoEnabled, mongoFind, mongoFindOne, mongoInsertOne, mongoUpdateOne, mongoDeleteMany } = require('../db');
 const InputItem = require('../models/InputItem');
 
 // Get all inputs or filter by category
@@ -26,8 +26,12 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     if (await isMongoEnabled()) {
-      const result = await mongoInsert('inputs', req.body);
-      return res.status(201).json(result);
+      // Ensure createdAt is set for Mongo inserts so frontend can display the time
+      const doc = { ...req.body, createdAt: req.body.createdAt || new Date().toISOString() };
+      const insertResult = await mongoInsertOne('inputs', doc);
+      // insertResult.insertedId contains the new _id; return a consistent object
+      const created = { _id: insertResult.insertedId, ...doc };
+      return res.status(201).json(created);
     }
     const db = await readDB();
     const newInput = {
