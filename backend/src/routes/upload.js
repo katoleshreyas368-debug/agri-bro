@@ -7,30 +7,34 @@ try {
   // ensure src/config/cloudinary.js exposes an object with `upload` or adapt accordingly.
   const cloudConfig = require('../config/cloudinary');
   // cloudConfig may export { upload } or a default with upload property
-  cloudinaryUpload = cloudConfig && (cloudConfig.upload || cloudConfig.default && cloudConfig.default.upload) ? (cloudConfig.upload || cloudConfig.default.upload) : null;
+  cloudinaryUpload = cloudConfig && (cloudConfig.upload || (cloudConfig.default && cloudConfig.default.upload)) ? (cloudConfig.upload || cloudConfig.default.upload) : null;
 } catch (err) {
   // ignore - cloudinary config not present
   cloudinaryUpload = null;
 }
-
 if (cloudinaryUpload) {
+  console.log('Using Cloudinary uploader for /upload');
   // Use Cloudinary middleware when available
-  router.post('/', cloudinaryUpload.single('image'), (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+  // Wrap multer middleware so any upload errors are returned as JSON (not default HTML error page)
+  router.post('/', (req, res) => {
+    cloudinaryUpload.single('image')(req, res, function (err) {
+      if (err) {
+        console.error('Cloudinary upload middleware error:', err);
+        // If cloudinary/multer produced an error object, make the response JSON
+        return res.status(err.http_code || 400).json({ error: err.message || 'Cloud upload failed', details: err });
       }
-      // Cloudinary typically returns the URL in req.file.path or req.file.secure_url depending on middleware
-      const url = req.file.path || req.file.secure_url || req.file.url;
-      res.json({
-        url,
-        message: 'File uploaded to cloud successfully',
-        file: req.file
-      });
-    } catch (error) {
-      console.error('Cloud upload error:', error);
-      res.status(500).json({ error: error.message || 'Cloud upload failed' });
-    }
+      try {
+        if (!req.file) {
+          return res.status(400).json({ error: 'No file uploaded' });
+        }
+        console.log('Cloud upload result file:', req.file);
+        const url = req.file?.path || req.file?.secure_url || req.file?.url || (req.file && req.file.filename) || null;
+        return res.json({ url, message: 'File uploaded to cloud successfully', file: req.file });
+      } catch (error) {
+        console.error('Cloud upload error:', error);
+        return res.status(500).json({ error: error.message || 'Cloud upload failed' });
+      }
+    });
   });
 } else {
   // Fallback: local multer-based upload to public/uploads/inputs
@@ -90,12 +94,9 @@ if (cloudinaryUpload) {
         if (!req.file) {
           return res.status(400).json({ error: 'No file uploaded' });
         }
+        console.log('Local upload stored:', req.file.filename);
         const relativePath = '/uploads/inputs/' + req.file.filename;
-        res.json({
-          url: relativePath,
-          message: 'File uploaded successfully',
-          file: req.file
-        });
+        return res.json({ url: relativePath, message: 'File uploaded successfully', file: req.file });
       });
     } catch (error) {
       console.error('Server error during upload:', error);

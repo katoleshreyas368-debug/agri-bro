@@ -67,8 +67,12 @@ const AddInputModal: React.FC<AddInputModalProps> = ({ onClose }) => {
 
         console.log('✅ Upload successful:', uploadResult);
 
-        // 🔥 FIX: Make sure full URL is stored, not relative
-        imageUrl = `${API}${uploadResult.url}`;
+        // 🔥 FIX: Use absolute URL from Cloudinary as-is; otherwise prefix with API for local uploads
+        if (uploadResult.url && String(uploadResult.url).startsWith('http')) {
+          imageUrl = uploadResult.url;
+        } else if (uploadResult.url) {
+          imageUrl = `${API}${uploadResult.url}`;
+        }
       }
 
       // ✅ Step 2: Prepare payload
