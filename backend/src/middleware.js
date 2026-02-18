@@ -13,6 +13,16 @@ const requireAuth = async (req, res, next) => {
     return res.status(401).json({ error: 'unauthorized', message: 'Token missing.' });
   }
 
+  // DEMO BYPASS FOR LOGISTICS
+  if (token === 'demo_farmer_token') {
+    req.user = { id: 'demo_farmer', name: 'Demo Farmer', type: 'farmer' };
+    return next();
+  }
+  if (token === 'demo_transporter_token') {
+    req.user = { id: 'demo_transporter', name: 'Demo Transporter', type: 'transporter' };
+    return next();
+  }
+
   let user;
   if (await isMongoEnabled()) {
     user = await mongoFindOne('users', { id: token });

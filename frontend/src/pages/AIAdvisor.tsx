@@ -20,33 +20,23 @@ const AIAdvisor = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-  // 🧪 Step 1: Debug - List available models
-  const listAvailableModels = async () => {
-    try {
-      const models = await genAI.listModels();
-      console.log("✅ Available Gemini Models:", models);
-    } catch (error) {
-      console.error("❌ Error listing models:", error);
-    }
-  };
 
-  useEffect(() => {
-    listAvailableModels();
-  }, []);
 
   // 🌾 Step 2: Gemini AI Call
-  const fetchGeminiResponse = async (prompt) => {
+  const fetchGeminiResponse = async (prompt: string) => {
     try {
       const model = genAI.getGenerativeModel({
-        // 👇 You will replace this after checking console output
-        model: "gemma-3-12b-it", // Try "gemini-1.0-pro" if flash not found
+        model: "gemini-flash-latest",
+        generationConfig: {
+          temperature: 0.1,
+        },
       });
 
       const systemPrompt = `
       You are AgriBot 🌿, a friendly AI agriculture advisor.
       Respond in ${language === "both" ? "a mix of Hindi and English (Hinglish)" : language}.
       Provide helpful, region-specific advice about crops, fertilizers, and farming techniques for India.
-      Keep answers short, clear, and friendly with emojis. do not use markups and go with flow greet first then ask them location then ask them their crop details then ask them what do they need and keep the weather in reference also also provide market analysis reffering to nearby location and provide the goverment schemes suitable for the user be verhy friendly but a formal touch 
+      Keep answers short, clear, and friendly with emojis. do not use markups and go with flow greet first then ask them location then ask them their crop details then ask them what do they need and keep the weather in reference also also provide market analysis reffering to nearby location and provide the goverment schemes suitable for the user be verhy friendly but a formal touch, do not use formatting i want no bolds and italics. keep the tone good and enocuraging. do not loose context reply waht the user is saying if needed see previous quires also dont make it feel artificail chat bot its a human friendly bot. do not ask too many questions keep it minimal and to the point. and keep your asnwers short and crisp. 
       `;
 
       const result = await model.generateContent([systemPrompt, prompt]);
@@ -116,17 +106,16 @@ const AIAdvisor = () => {
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}
-                  className={`px-3 py-1 text-sm ${
-                    language === lang
-                      ? "bg-green-600 text-white"
-                      : "text-gray-700"
-                  }`}
+                  className={`px-3 py-1 text-sm ${language === lang
+                    ? "bg-green-600 text-white"
+                    : "text-gray-700"
+                    }`}
                 >
                   {lang === "hindi"
                     ? "हिंदी"
                     : lang === "english"
-                    ? "English"
-                    : "Both"}
+                      ? "English"
+                      : "Both"}
                 </button>
               ))}
             </div>
@@ -139,16 +128,14 @@ const AIAdvisor = () => {
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex ${
-                  msg.type === "user" ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"
+                  }`}
               >
                 <div
-                  className={`p-3 rounded-lg max-w-[75%] ${
-                    msg.type === "user"
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-900"
-                  }`}
+                  className={`p-3 rounded-lg max-w-[75%] ${msg.type === "user"
+                    ? "bg-green-600 text-white"
+                    : "bg-gray-100 text-gray-900"
+                    }`}
                 >
                   <p className="text-sm whitespace-pre-line">{msg.content}</p>
                 </div>

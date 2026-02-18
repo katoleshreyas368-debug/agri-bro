@@ -8,7 +8,7 @@ const Login: React.FC = () => {
     name: '',
     phone: '',
     location: '',
-    userType: 'farmer' as 'farmer' | 'buyer' | 'vendor'
+    userType: 'farmer' as 'farmer' | 'buyer' | 'vendor' | 'transporter'
   });
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -133,6 +133,7 @@ const Login: React.FC = () => {
                 <option value="farmer">Farmer</option>
                 <option value="buyer">Buyer</option>
                 <option value="vendor">Vendor</option>
+                <option value="transporter">Transporter</option>
               </select>
             </div>
           </div>

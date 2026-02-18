@@ -8,6 +8,8 @@ import Marketplace from './pages/Marketplace';
 import InputStore from './pages/InputStore';
 import AIAdvisor from './pages/AIAdvisor';
 import Logistics from './pages/Logistics';
+import FarmerLogistics from './pages/FarmerLogistics';
+import TransporterDashboard from './pages/TransporterDashboard';
 import Community from './pages/Community';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -23,13 +25,15 @@ function App() {
         <Router>
           <div className="min-h-screen bg-gray-50">
             <Navbar setSidebarOpen={setSidebarOpen} />
-          
+
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/inputs" element={<InputStore />} />
               <Route path="/advisor" element={<AIAdvisor />} />
               <Route path="/logistics" element={<Logistics />} />
+              <Route path="/logistics/farmer" element={<FarmerLogistics />} />
+              <Route path="/logistics/transporter" element={<TransporterDashboard />} />
               <Route path="/community" element={<Community />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/login" element={<Login />} />
