@@ -13,6 +13,7 @@
     "cleanup-e2e": "node -r dotenv/config scripts/cleanup-e2e.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.6.0",
     "body-parser": "^2.2.0",
     "chromadb": "^3.1.0",

@@ -12,6 +12,7 @@ const logisticsRoutes = require('./routes/logistics');
 const communityRoutes = require('./routes/community');
 const healthRoutes = require('./routes/health');
 const uploadRoutes = require('./routes/upload');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,7 @@ app.use('/logistics', logisticsRoutes);
 app.use('/community', communityRoutes);
 app.use('/health', healthRoutes);
 app.use('/upload', uploadRoutes);
+app.use('/chat', chatRoutes);
 app.use('/uploads', express.static('public/uploads'));
 
 app.get('/', (req, res) => {

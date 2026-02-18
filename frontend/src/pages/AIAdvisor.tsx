@@ -1,11 +1,6 @@
 
 import { Send, Bot, Globe } from "lucide-react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useState } from "react";
-
-// ⚠️ For TESTING ONLY: Hardcode your API key directly here.
-// Replace this with your actual Gemini API key.
-const genAI = new GoogleGenerativeAI("AIzaSyC6P0yYBEBIXdc4-PHtl-6v76QrrNWCBuM");
 
 const AIAdvisor = () => {
   const [language, setLanguage] = useState("both");
@@ -21,30 +16,22 @@ const AIAdvisor = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
 
-
-
-  // 🌾 Step 2: Gemini AI Call
+  // 🌾 Fetch response from backend /chat endpoint
   const fetchGeminiResponse = async (prompt: string) => {
     try {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-flash-latest",
-        generationConfig: {
-          temperature: 0.1,
-        },
+      const res = await fetch("http://localhost:3000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: prompt, language }),
       });
 
-      const systemPrompt = `
-      You are AgriBot 🌿, a friendly AI agriculture advisor.
-      Respond in ${language === "both" ? "a mix of Hindi and English (Hinglish)" : language}.
-      Provide helpful, region-specific advice about crops, fertilizers, and farming techniques for India.
-      Keep answers short, clear, and friendly with emojis. do not use markups and go with flow greet first then ask them location then ask them their crop details then ask them what do they need and keep the weather in reference also also provide market analysis reffering to nearby location and provide the goverment schemes suitable for the user be verhy friendly but a formal touch, do not use formatting i want no bolds and italics. keep the tone good and enocuraging. do not loose context reply waht the user is saying if needed see previous quires also dont make it feel artificail chat bot its a human friendly bot. do not ask too many questions keep it minimal and to the point. and keep your asnwers short and crisp. 
-      `;
+      if (!res.ok) throw new Error("Backend error");
 
-      const result = await model.generateContent([systemPrompt, prompt]);
-      return result.response.text();
+      const data = await res.json();
+      return data.reply;
     } catch (error) {
-      console.error("❌ Gemini API error:", error);
-      return "⚠️ Unable to connect to Gemini API. Please check your key or network.";
+      console.error("❌ Chat API error:", error);
+      return "⚠️ Unable to get a response. Please check if the server is running.";
     }
   };
 
