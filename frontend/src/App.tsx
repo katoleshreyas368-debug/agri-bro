@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
@@ -15,16 +15,14 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import ImageUpload from "./components/ImageUpload";
 
-function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('marketplace');
 
+function App() {
   return (
     <AuthProvider>
       <DataProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
-            <Navbar setSidebarOpen={setSidebarOpen} />
+            <Navbar />
 
             <Routes>
               <Route path="/" element={<Landing />} />

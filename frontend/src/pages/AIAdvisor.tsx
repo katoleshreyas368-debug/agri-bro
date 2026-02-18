@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+
 import { Send, Bot, Globe } from "lucide-react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useState } from "react";
 
 // ⚠️ For TESTING ONLY: Hardcode your API key directly here.
 // Replace this with your actual Gemini API key.

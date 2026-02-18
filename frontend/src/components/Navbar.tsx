@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Leaf, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
-const Navbar: React.FC<{ setSidebarOpen: (open: boolean) => void }> = ({ setSidebarOpen }) => {
+const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -36,11 +36,10 @@ const Navbar: React.FC<{ setSidebarOpen: (open: boolean) => void }> = ({ setSide
               <Link
                 key={item.name}
                 to={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive(item.href)
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.href)
                     ? 'text-green-600 bg-green-50'
                     : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-                }`}
+                  }`}
               >
                 {item.name}
               </Link>
@@ -96,11 +95,10 @@ const Navbar: React.FC<{ setSidebarOpen: (open: boolean) => void }> = ({ setSide
               <Link
                 key={item.name}
                 to={item.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                  isActive(item.href)
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${isActive(item.href)
                     ? 'text-green-600 bg-green-50'
                     : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
-                }`}
+                  }`}
                 onClick={() => setIsOpen(false)}
               >
                 {item.name}
@@ -139,13 +137,6 @@ const Navbar: React.FC<{ setSidebarOpen: (open: boolean) => void }> = ({ setSide
           </div>
         </div>
       )}
-      {/* Add this button for mobile or desktop as needed */}
-      <button
-        className="md:hidden p-2"
-        onClick={() => setSidebarOpen(true)}
-      >
-        <Menu className="h-6 w-6 text-gray-700" />
-      </button>
     </nav>
   );
 };
