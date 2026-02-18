@@ -13,7 +13,7 @@ async function getCollection() {
     } catch (e) {
         // Create table with a dummy item to initialize the schema
         table = await db.createTable("knowledge_base", [
-            { id: "init", vector: new Array(768).fill(0), text: "initialization", source: "none" }
+            { id: "init", vector: new Array(384).fill(0), text: "initialization", source: "none" }
         ]);
     }
 

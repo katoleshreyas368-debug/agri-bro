@@ -42,3 +42,18 @@ Thumbs.db
 test-results/
 playwright-report/
 coverage/
+
+# Vector stores & embeddings
+backend/rag/agri_data/
+rag_part/chroma_db/
+
+# PDF data files (too large for git)
+backend/rag/data/
+rag_part/data/
+
+# Python virtual environment
+rag_part/venv/
+__pycache__/
+
+# HuggingFace model cache
+.cache/
