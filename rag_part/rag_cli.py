@@ -1,120 +1,94 @@
 import os
+import uuid
+from pathlib import Path
 
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import Ollama
-
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassthrough
+import chromadb
+from chromadb.utils import embedding_functions
+from pypdf import PdfReader
 
 
-PDF_PATH = "data/documents/ICAR-En-Kharif-Agro-Advisories-for-Farmers-2025.pdf"
-VECTORSTORE_PATH = "vectorstore"
+# -------- CONFIG --------
+DATA_FOLDER = "data"          # folder with PDFs
+CHROMA_PATH = "chroma_db"     # where DB will be stored
+COLLECTION_NAME = "agribro_docs"
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 150
+# ------------------------
 
 
-def get_embeddings():
-    return HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    )
+def chunk_text(text, chunk_size=800, overlap=150):
+    chunks = []
+    start = 0
+    text_length = len(text)
+
+    while start < text_length:
+        end = start + chunk_size
+        chunk = text[start:end]
+        chunks.append(chunk)
+        start += chunk_size - overlap
+
+    return chunks
 
 
-def build_vectorstore():
-    if not os.path.exists(PDF_PATH):
-        raise FileNotFoundError(f"PDF not found at {PDF_PATH}")
+def extract_text_from_pdf(pdf_path):
+    reader = PdfReader(pdf_path)
+    full_text = ""
 
-    print("📄 Loading PDF...")
-    loader = PyPDFLoader(PDF_PATH)
-    documents = loader.load()
+    for page in reader.pages:
+        text = page.extract_text()
+        if text:
+            full_text += text + "\n"
 
-    print("✂ Splitting into chunks...")
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=150
-    )
-    docs = splitter.split_documents(documents)
-
-    print("🧠 Creating embeddings...")
-    embeddings = get_embeddings()
-
-    print("💾 Building FAISS index...")
-    vectorstore = FAISS.from_documents(docs, embeddings)
-    vectorstore.save_local(VECTORSTORE_PATH)
-
-    print("✅ Vectorstore built successfully!")
-
-
-def load_rag_chain():
-    embeddings = get_embeddings()
-
-    if not os.path.exists(VECTORSTORE_PATH):
-        raise FileNotFoundError("Vectorstore not found.")
-
-    print("📂 Loading vectorstore...")
-    vectorstore = FAISS.load_local(
-        VECTORSTORE_PATH,
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
-
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-
-    print("🤖 Loading Ollama model...")
-    llm = Ollama(model="mistral")
-
-    prompt = PromptTemplate.from_template(
-        """Use the following context to answer the question.
-
-Context:
-{context}
-
-Question:
-{question}
-
-Answer:"""
-    )
-
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-
-    rag_chain = (
-        {
-            "context": retriever | format_docs,
-            "question": RunnablePassthrough()
-        }
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-
-    return rag_chain
+    return full_text
 
 
 def main():
-    try:
-        if not os.path.exists(VECTORSTORE_PATH):
-            build_vectorstore()
+    print("🚀 Starting PDF ingestion...")
 
-        rag_chain = load_rag_chain()
+    # Create persistent Chroma client
+    client = chromadb.PersistentClient(path=CHROMA_PATH)
 
-        print("\n🚀 RAG CLI Ready! Type 'exit' to quit.\n")
+    # Embedding model
+    embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+        model_name="all-MiniLM-L6-v2"
+    )
 
-        while True:
-            query = input("❓ Ask: ")
+    collection = client.get_or_create_collection(
+        name=COLLECTION_NAME,
+        embedding_function=embedding_function
+    )
 
-            if query.lower() == "exit":
-                break
+    pdf_files = list(Path(DATA_FOLDER).glob("*.pdf"))
 
-            answer = rag_chain.invoke(query)
+    if not pdf_files:
+        print("❌ No PDFs found in data folder.")
+        return
 
-            print("\n💬 Answer:")
-            print(answer)
-            print("\n" + "-" * 50 + "\n")
+    for pdf_file in pdf_files:
+        print(f"📄 Processing: {pdf_file.name}")
 
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
+        text = extract_text_from_pdf(pdf_file)
+        chunks = chunk_text(text, CHUNK_SIZE, CHUNK_OVERLAP)
+
+        ids = []
+        documents = []
+        metadatas = []
+
+        for chunk in chunks:
+            ids.append(str(uuid.uuid4()))
+            documents.append(chunk)
+            metadatas.append({"source": pdf_file.name})
+
+        collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids
+        )
+
+        print(f"✅ Added {len(chunks)} chunks from {pdf_file.name}")
+
+    print("\n🎉 All PDFs embedded successfully!")
+    print(f"📂 Chroma DB stored at: {CHROMA_PATH}")
 
 
 if __name__ == "__main__":
