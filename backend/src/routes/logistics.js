@@ -79,8 +79,10 @@ router.post('/', requireAuth, async (req, res) => {
 ===================================================== */
 router.patch('/:id/accept', requireAuth, async (req, res) => {
   try {
+    console.log(`[Accept Job] User ID: ${req.user.id}, Type: ${req.user.type}`);
     if (req.user.type !== 'transporter') {
-      return res.status(403).json({ error: 'only_transporters_allowed' });
+      console.log('[Accept Job] Failed: User is not a transporter');
+      return res.status(403).json({ error: 'only_transporters_allowed', currentType: req.user.type });
     }
 
     const { id } = req.params;

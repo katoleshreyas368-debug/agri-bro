@@ -42,6 +42,12 @@ router.post('/login', async (req, res) => {
         }
         user = mongoDoc;
         await mongoInsertOne('users', user);
+      } else {
+        // User exists, check if type needs update (e.g. switching from farmer <-> transporter)
+        if (type && user.type !== type) {
+          await require('../db').mongoUpdateOne('users', { id: user.id }, { $set: { type } });
+          user.type = type;
+        }
       }
       // Normalize response so callers still see a `location` string
       const respUser = Object.assign({}, user);
@@ -62,6 +68,12 @@ router.post('/login', async (req, res) => {
       };
       db.users.push(user);
       await writeDB(db);
+    } else {
+      // User exists, update type if changed
+      if (type && user.type !== type) {
+        user.type = type;
+        await writeDB(db);
+      }
     }
 
     res.json({ user, token: user.id }); // Return user.id as a simple token
