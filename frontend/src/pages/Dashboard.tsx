@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import {
   TrendingUp,
   ShoppingCart,
@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
+
+const AgriMap = React.lazy(() => import('../components/AgriMap'));
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -58,7 +60,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        
+
         {/* Header */}
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-extrabold text-green-700">Welcome back, {user.name}!</h1>
@@ -95,9 +97,8 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-semibold text-green-600">₹{crop.currentBid}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        crop.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`text-xs px-2 py-1 rounded-full ${crop.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
                         {crop.status}
                       </span>
                     </div>
@@ -123,11 +124,10 @@ const Dashboard: React.FC = () => {
                       <h3 className="font-semibold text-gray-800">{request.cropType}</h3>
                       <p className="text-sm text-gray-500">{request.fromLocation} → {request.toLocation}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                    <span className={`text-xs px-2 py-1 rounded-full ${request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                       request.status === 'matched' ? 'bg-blue-100 text-blue-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
+                        'bg-green-100 text-green-800'
+                      }`}>
                       {request.status}
                     </span>
                   </div>
@@ -140,6 +140,14 @@ const Dashboard: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Logistics Map */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-12">
+          <h2 className="text-xl font-semibold text-green-700 mb-4">Logistics Map</h2>
+          <Suspense fallback={<div className="h-[500px] flex items-center justify-center text-gray-400">Loading map...</div>}>
+            <AgriMap />
+          </Suspense>
         </div>
 
         {/* Quick Actions */}
