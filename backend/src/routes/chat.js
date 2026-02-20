@@ -86,8 +86,8 @@ If the user asks anything unrelated to agriculture, farming, rural livelihood, s
         const model = genAI.getGenerativeModel({
             model: "gemini-flash-latest",
             generationConfig: {
-                temperature: 0.2,
-                maxOutputTokens: 512,
+                temperature: 0.1,
+                maxOutputTokens: 4000,
             },
             systemInstruction: systemPrompt,
         });

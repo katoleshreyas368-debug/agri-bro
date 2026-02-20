@@ -5,7 +5,9 @@ let extractor;
 async function getEmbedding(text) {
     // Load the model only once
     if (!extractor) {
-        extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+        extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', {
+            dtype: 'q8',
+        });
     }
 
     // Generate embedding

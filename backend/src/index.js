@@ -79,6 +79,14 @@ if (require.main === module) {
     console.log('Running without MongoDB - using file-based storage');
   });
 
+  // Pre-warm the embedding model so first chat request is fast
+  const { getEmbedding } = require('../rag/embeddings');
+  getEmbedding('warmup').then(() => {
+    console.log('Embedding model pre-warmed successfully');
+  }).catch((err) => {
+    console.error('Embedding model pre-warm failed:', err.message);
+  });
+
   process.on('uncaughtException', (err) => {
     console.error('Uncaught exception:', err && err.stack ? err.stack : err);
   });
