@@ -100,7 +100,7 @@ const Marketplace: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-brand-surface">
+    <div className="min-h-[calc(100vh-80px)] bg-brand-surface">
       {/* ── Error Banner ── */}
       {error && (
         <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-3 flex justify-between items-center">
@@ -178,7 +178,7 @@ const Marketplace: React.FC = () => {
 
           {/* ── Left Sidebar ── */}
           <aside className={`
-            fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 lg:static lg:translate-x-0 lg:w-64 lg:flex-shrink-0 lg:rounded-xl lg:border lg:border-gray-200 lg:h-fit lg:sticky lg:top-24
+            fixed inset-y-0 left-0 z-[1500] w-72 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 lg:static lg:translate-x-0 lg:w-64 lg:flex-shrink-0 lg:rounded-xl lg:border lg:border-gray-200 lg:h-fit lg:sticky lg:top-[104px]
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}>
             {/* Mobile close */}
@@ -249,7 +249,7 @@ const Marketplace: React.FC = () => {
 
           {/* Sidebar overlay (mobile) */}
           {sidebarOpen && (
-            <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/30 z-30 lg:hidden" />
+            <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/30 z-[1400] lg:hidden" />
           )}
 
           {/* ── Right Content Grid ── */}

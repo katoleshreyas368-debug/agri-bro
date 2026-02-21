@@ -98,9 +98,9 @@ const TransporterDashboard: React.FC = () => {
     const totalInTransit = requests.filter(r => r.status === 'in-transit').length;
 
     return (
-        <div className="h-[calc(100vh-64px)] bg-brand-surface text-gray-900 flex overflow-hidden">
+        <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex overflow-hidden">
             {/* ── Side Console: Jobs & Log ── */}
-            <aside className="w-96 bg-white border-r border-gray-200 flex flex-col z-50 shadow-xl">
+            <aside className="w-96 bg-white border-r border-gray-200 flex flex-col z-[1500] shadow-xl">
                 <div className="p-6 border-b border-gray-100 bg-white/50 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -261,7 +261,7 @@ const TransporterDashboard: React.FC = () => {
                                 key={selectedJob.id}
                                 fromLocation={selectedJob.fromLocation}
                                 toLocation={selectedJob.toLocation}
-                                height="calc(100vh - 64px)"
+                                height="calc(100vh - 80px)"
                                 progress={selectedJob.status === 'in-transit' ? (selectedJob.progress ?? 0) : undefined}
                                 theme="streets"
                             />
@@ -275,7 +275,7 @@ const TransporterDashboard: React.FC = () => {
                 </div>
 
                 {/* Overlays */}
-                <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-50">
+                <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[1100]">
                     <div className="flex gap-4 pointer-events-auto">
                         <div className="bg-white/90 backdrop-blur-xl border border-gray-200 p-4 rounded-2xl flex items-center gap-6 shadow-2xl">
                             <div>
@@ -303,7 +303,7 @@ const TransporterDashboard: React.FC = () => {
                 </div>
 
                 {selectedJob && (
-                    <div className="absolute bottom-6 left-6 right-6 pointer-events-none z-50 flex justify-center">
+                    <div className="absolute bottom-6 left-6 right-6 pointer-events-none z-[1100] flex justify-center">
                         <div className="bg-white/95 backdrop-blur-2xl border border-gray-200 p-6 rounded-[32px] shadow-2xl max-w-4xl w-full flex flex-col md:flex-row items-center justify-between pointer-events-auto border-t-2 border-t-brand-green/30">
                             <div className="flex items-center gap-6 mb-4 md:mb-0">
                                 <div className="w-16 h-16 bg-gray-50 rounded-[20px] flex items-center justify-center text-3xl shadow-inner border border-gray-100">

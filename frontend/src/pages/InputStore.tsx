@@ -3,6 +3,7 @@ import { ShoppingCart, Package, Truck, Shield, Search, BarChart3, TrendingUp, Al
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import AddInputModal from '../components/AddInputModal';
+import AddToCartModal from '../components/AddToCartModal';
 
 /* ============================================================
    InputStore Page — Modern E-Commerce Layout
@@ -20,6 +21,7 @@ const InputStore: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [selectedItemForCart, setSelectedItemForCart] = useState<any | null>(null);
 
   const categories = [
     { value: 'all', label: 'All Products', color: 'bg-gray-100 text-gray-700' },
@@ -71,15 +73,15 @@ const InputStore: React.FC = () => {
     : paginatedItems;
 
   /* ── cart ── */
-  const addToCart = (itemId: string) => {
+  const addToCart = (itemId: string, quantity: number) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === itemId);
       if (existing) {
         return prev.map(item =>
-          item.id === itemId ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === itemId ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { id: itemId, quantity: 1 }];
+      return [...prev, { id: itemId, quantity }];
     });
   };
 
@@ -98,7 +100,7 @@ const InputStore: React.FC = () => {
   const categoryCount = new Set(inputItems.map(i => i.category)).size;
 
   return (
-    <div className="min-h-screen bg-brand-surface">
+    <div className="min-h-[calc(100vh-80px)] bg-brand-surface">
       {/* ── Error Banner ── */}
       {error && (
         <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-3 flex justify-between items-center">
@@ -193,7 +195,7 @@ const InputStore: React.FC = () => {
 
           {/* ── Left Sidebar ── */}
           <aside className={`
-            fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 lg:static lg:translate-x-0 lg:w-64 lg:flex-shrink-0 lg:rounded-xl lg:border lg:border-gray-200 lg:h-fit lg:sticky lg:top-24
+            fixed inset-y-0 left-0 z-[1500] w-72 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 lg:static lg:translate-x-0 lg:w-64 lg:flex-shrink-0 lg:rounded-xl lg:border lg:border-gray-200 lg:h-fit lg:sticky lg:top-[104px]
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}>
             {/* Mobile close */}
@@ -280,7 +282,7 @@ const InputStore: React.FC = () => {
 
           {/* Sidebar overlay (mobile) */}
           {sidebarOpen && (
-            <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/30 z-30 lg:hidden" />
+            <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/30 z-[1400] lg:hidden" />
           )}
 
           {/* ── Right Content Grid ── */}
@@ -356,7 +358,7 @@ const InputStore: React.FC = () => {
                       {/* Quick add-to-cart on hover */}
                       {isAuthenticated && item.inStock && (
                         <button
-                          onClick={() => addToCart(item.id)}
+                          onClick={() => setSelectedItemForCart(item)}
                           className="absolute bottom-3 left-3 bg-brand-green text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                         >
                           <ShoppingCart className="h-3.5 w-3.5" /> Add to Cart
@@ -388,7 +390,7 @@ const InputStore: React.FC = () => {
                         </div>
                         {isAuthenticated && item.inStock ? (
                           <button
-                            onClick={() => addToCart(item.id)}
+                            onClick={() => setSelectedItemForCart(item)}
                             className="bg-brand-green text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-brand-green-dark transition-colors flex items-center gap-1.5"
                           >
                             <ShoppingCart className="h-3.5 w-3.5" /> Add
@@ -459,7 +461,7 @@ const InputStore: React.FC = () => {
       {/* ── Floating Cart Summary ── */}
       {cart.length > 0 && (
         <div
-          className="fixed bottom-6 right-6 bg-white rounded-2xl border border-gray-200 p-5 z-50 w-72 transition-all duration-300"
+          className="fixed bottom-6 right-6 bg-white rounded-2xl border border-gray-200 p-5 z-[500] w-72 transition-all duration-300"
           style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}
         >
           <div className="flex items-center gap-3 mb-3">
@@ -485,6 +487,13 @@ const InputStore: React.FC = () => {
 
       {/* ── Add Input Modal ── */}
       {showAddInput && <AddInputModal onClose={() => setShowAddInput(false)} />}
+      {selectedItemForCart && (
+        <AddToCartModal
+          item={selectedItemForCart}
+          onClose={() => setSelectedItemForCart(null)}
+          onConfirm={(qty) => addToCart(selectedItemForCart.id, qty)}
+        />
+      )}
     </div>
   );
 };

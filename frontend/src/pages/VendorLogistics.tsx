@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, useCallback } from 'react';
-import { MapPin, Calendar, Truck, CheckCircle, X, Search, Plus, ChevronRight, Activity, Wind, CloudRain, Navigation, Package } from 'lucide-react';
+import { MapPin, Calendar, Truck, CheckCircle, X, Search, Plus, Activity, Wind, Navigation, Package, Store } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import InlineLocationPicker from '../components/InlineLocationPicker';
 import LocationPreviewMap from '../components/LocationPreviewMap';
@@ -8,7 +8,7 @@ const DeliveryRouteMap = React.lazy(() => import('../components/DeliveryRouteMap
 
 interface LogisticsRequest {
     id: string;
-    cropType: string;
+    cropType: string; // Using same field name for backend compatibility
     quantity: number;
     fromLocation: string;
     toLocation: string;
@@ -17,7 +17,7 @@ interface LogisticsRequest {
     progress?: number;
 }
 
-const FarmerLogistics: React.FC = () => {
+const VendorLogistics: React.FC = () => {
     const { user } = useAuth();
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ const FarmerLogistics: React.FC = () => {
 
     // Form State
     const [formData, setFormData] = useState<Omit<LogisticsRequest, 'id' | 'status' | 'progress'>>({
-        cropType: '',
+        cropType: '', // This will represent Input Type for Vendor
         quantity: 0,
         fromLocation: '',
         toLocation: '',
@@ -120,9 +120,6 @@ const FarmerLogistics: React.FC = () => {
         return matchesSearch && matchesStatus;
     });
 
-    const activeInTransit = requests.filter(r => r.status === 'in-transit');
-    console.log("Active in-transit sessions:", activeInTransit.length);
-
     return (
         <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex overflow-hidden">
             {/* ── Left Sidebar: Shipments & Control ── */}
@@ -130,8 +127,8 @@ const FarmerLogistics: React.FC = () => {
                 <div className="p-6 border-b border-gray-100 bg-white/50 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-6">
                         <div>
-                            <p className="text-[10px] font-bold text-brand-green uppercase tracking-[0.2em]">Logistics Hub</p>
-                            <h1 className="text-xl font-bold mt-1 text-gray-900">Farmer Dashboard</h1>
+                            <p className="text-[10px] font-bold text-brand-green uppercase tracking-[0.2em]">Supply Chain Hub</p>
+                            <h1 className="text-xl font-bold mt-1 text-gray-900">Vendor Dashboard</h1>
                         </div>
                         <button
                             onClick={() => setShowForm(true)}
@@ -145,7 +142,7 @@ const FarmerLogistics: React.FC = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
                             type="text"
-                            placeholder="Search shipments..."
+                            placeholder="Search inventory dispatch..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/50 transition-all placeholder:text-gray-400"
@@ -155,7 +152,7 @@ const FarmerLogistics: React.FC = () => {
 
                 <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 CustomScrollbar">
                     <div className="flex items-center justify-between px-2 mb-2">
-                        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Your Shipments</h2>
+                        <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Inventory Outflow</h2>
                         <select
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
@@ -171,7 +168,7 @@ const FarmerLogistics: React.FC = () => {
                     {filteredRequests.length === 0 ? (
                         <div className="text-center py-12 opacity-30 text-gray-400">
                             <Truck size={40} className="mx-auto mb-3" />
-                            <p className="text-sm">No shipments found</p>
+                            <p className="text-sm">No dispatches found</p>
                         </div>
                     ) : (
                         filteredRequests.map(req => (
@@ -192,7 +189,7 @@ const FarmerLogistics: React.FC = () => {
                                         </div>
                                         <div>
                                             <h3 className="text-sm font-bold uppercase tracking-wide leading-none text-gray-900">{req.cropType}</h3>
-                                            <p className="text-[10px] text-gray-400 mt-1.5">{req.quantity} KG • {req.requestedDate}</p>
+                                            <p className="text-[10px] text-gray-400 mt-1.5">{req.quantity} Units • {req.requestedDate}</p>
                                         </div>
                                     </div>
                                     <StatusBadge status={req.status} />
@@ -203,14 +200,14 @@ const FarmerLogistics: React.FC = () => {
                                         <MapPin size={10} className="text-brand-green" /> {req.fromLocation}
                                     </div>
                                     <div className="flex items-center gap-2 text-[10px] text-gray-500 italic">
-                                        <Navigation size={10} className="text-red-500" /> {req.toLocation}
+                                        <Store size={10} className="text-red-500" /> {req.toLocation}
                                     </div>
                                 </div>
 
                                 {req.status === 'in-transit' && (
                                     <div className="mt-4">
                                         <div className="flex justify-between items-center text-[10px] mb-1.5">
-                                            <span className="text-blue-500 font-bold uppercase tracking-widest">En Route</span>
+                                            <span className="text-blue-500 font-bold uppercase tracking-widest">In Transit</span>
                                             <span className="text-gray-600">{req.progress}%</span>
                                         </div>
                                         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
@@ -219,12 +216,6 @@ const FarmerLogistics: React.FC = () => {
                                                 style={{ width: `${req.progress}%` }}
                                             />
                                         </div>
-                                    </div>
-                                )}
-
-                                {selectedRequest?.id === req.id && (
-                                    <div className="absolute right-3 bottom-3 opacity-40 text-brand-green">
-                                        <ChevronRight size={16} />
                                     </div>
                                 )}
                             </div>
@@ -236,12 +227,12 @@ const FarmerLogistics: React.FC = () => {
                 <div className="p-6 bg-gray-50 mt-auto border-t border-gray-100">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="bg-white p-3 rounded-2xl border border-gray-100">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Daily Fuel</p>
-                            <p className="text-lg font-bold mt-0.5 text-brand-green">14.2 GAL</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase">Total Dispatched</p>
+                            <p className="text-lg font-bold mt-0.5 text-brand-green">{requests.length} Units</p>
                         </div>
                         <div className="bg-white p-3 rounded-2xl border border-gray-100">
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Uptime</p>
-                            <p className="text-lg font-bold mt-0.5 text-blue-500">99.8%</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase">Efficiency</p>
+                            <p className="text-lg font-bold mt-0.5 text-blue-500">98.5%</p>
                         </div>
                     </div>
                 </div>
@@ -254,7 +245,7 @@ const FarmerLogistics: React.FC = () => {
                         <Suspense fallback={
                             <div className="h-full w-full flex flex-col items-center justify-center bg-brand-surface">
                                 <Activity className="text-brand-green animate-pulse mb-4" size={40} />
-                                <p className="text-sm font-bold uppercase tracking-widest text-gray-400">Initializing Secure Link...</p>
+                                <p className="text-sm font-bold uppercase tracking-widest text-gray-400">Loading Telemetry...</p>
                             </div>
                         }>
                             <DeliveryRouteMap
@@ -269,55 +260,45 @@ const FarmerLogistics: React.FC = () => {
                     ) : (
                         <div className="h-full w-full flex flex-col items-center justify-center bg-brand-surface">
                             <Truck size={64} className="text-gray-200 mb-6" />
-                            <h3 className="text-xl font-bold text-gray-300">Select a shipment to track</h3>
+                            <h3 className="text-xl font-bold text-gray-300">Track your inventory in real-time</h3>
                         </div>
                     )}
                 </div>
 
-                {/* Overlay: Top Navigation Bar (Integrated in Map Area) */}
+                {/* Overlay: Top Navigation Bar */}
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none z-[1100]">
                     <div className="flex gap-4 pointer-events-auto">
                         <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-4 flex items-center gap-6 shadow-2xl">
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">Elevation</span>
-                                <span className="text-sm font-bold text-gray-900">1,240m</span>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Load Type</span>
+                                <span className="text-sm font-bold text-gray-900">Agriculture Inputs</span>
                             </div>
                             <div className="w-px h-8 bg-gray-100"></div>
                             <div className="flex flex-col">
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">Coordinates</span>
-                                <span className="text-sm font-bold text-brand-green tracking-tighter">18.52°N, 73.85°E</span>
-                            </div>
-                        </div>
-
-                        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-4 flex items-center gap-4 shadow-2xl">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-500">
-                                <CloudRain size={16} />
-                            </div>
-                            <div>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase">Local Weather</p>
-                                <p className="text-sm font-bold text-gray-900">Rain Expectancy 12%</p>
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Vendor ID</span>
+                                <span className="text-sm font-bold text-brand-green tracking-tighter">VN-7829-X</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-2xl p-4 flex items-center gap-6 pointer-events-auto shadow-2xl z-[1100]">
                         <div className="text-right">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase">System Status</p>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase">Dispatch Status</p>
                             <div className="flex items-center gap-2 justify-end mt-0.5">
                                 <div className="w-2 h-2 rounded-full bg-brand-green animate-pulse"></div>
-                                <span className="text-xs font-bold text-brand-green uppercase tracking-tighter">Secure Link Active</span>
+                                <span className="text-xs font-bold text-brand-green uppercase tracking-tighter">Live Tracking Active</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Overlay: Bottom Details Panel (Integrated in Map Area) */}
+                {/* Overlay: Bottom Details Panel */}
                 {selectedRequest && (
                     <div className="absolute bottom-6 left-6 right-6 pointer-events-none z-[1100]">
                         <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-[32px] p-6 flex flex-col md:flex-row md:items-center justify-between pointer-events-auto shadow-2xl max-w-5xl mx-auto border-t-2 border-t-brand-green/30">
                             <div className="flex items-center gap-5 mb-4 md:mb-0">
                                 <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-gray-100">
-                                    {selectedRequest.cropType === 'Wheat' ? '🌾' : selectedRequest.cropType === 'Rice' ? '🍚' : '📦'}
+                                    <Package className="text-brand-green" size={32} />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-3">
@@ -325,30 +306,27 @@ const FarmerLogistics: React.FC = () => {
                                         <StatusBadge status={selectedRequest.status} large />
                                     </div>
                                     <p className="text-gray-500 text-sm mt-1 font-medium flex items-center gap-2">
-                                        ID: <span className="text-gray-900 font-bold tracking-tighter">{selectedRequest.id.split('-')[0].toUpperCase()}</span>
+                                        DISPATCH: <span className="text-gray-900 font-bold tracking-tighter">{selectedRequest.id.split('-')[0].toUpperCase()}</span>
                                         <span className="opacity-20">•</span>
-                                        Sourced from <span className="text-brand-green font-bold">{selectedRequest.fromLocation}</span>
+                                        From <span className="text-brand-green font-bold">{selectedRequest.fromLocation}</span>
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-8">
                                 <div className="text-center">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Quantity</p>
-                                    <p className="text-xl font-black text-gray-900">{selectedRequest.quantity} <span className="text-xs text-gray-400">KG</span></p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Units</p>
+                                    <p className="text-xl font-black text-gray-900">{selectedRequest.quantity} <span className="text-xs text-gray-400">UNITS</span></p>
                                 </div>
                                 <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
                                 <div className="text-center">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Destined For</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Shipping To</p>
                                     <p className="text-xl font-black text-red-500 uppercase tracking-tighter">{selectedRequest.toLocation}</p>
                                 </div>
                                 <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
                                 <div className="flex flex-col gap-2">
                                     <button className="bg-brand-green text-white text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-lg shadow-brand-green/20">
-                                        Request Update
-                                    </button>
-                                    <button className="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-all text-[9px] font-bold uppercase tracking-widest py-1 rounded-lg">
-                                        Shipment Logs
+                                        Audit Dispatch
                                     </button>
                                 </div>
                             </div>
@@ -369,30 +347,34 @@ const FarmerLogistics: React.FC = () => {
                         </button>
 
                         <div className="mb-8">
-                            <span className="text-[10px] font-bold text-brand-green uppercase tracking-[0.3em]">New Shipment</span>
-                            <h2 className="text-3xl font-black text-gray-900 mt-1">Initiate Logistics</h2>
+                            <span className="text-[10px] font-bold text-brand-green uppercase tracking-[0.3em]">Inventory Hub</span>
+                            <h2 className="text-3xl font-black text-gray-900 mt-1">Dispatch Inputs</h2>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Crop Variety</label>
-                                    <input
-                                        type="text"
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Input Category</label>
+                                    <select
                                         required
-                                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
-                                        placeholder="e.g. Alphonso Mangoes"
+                                        className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all"
                                         value={formData.cropType}
                                         onChange={e => setFormData({ ...formData, cropType: e.target.value })}
-                                    />
+                                    >
+                                        <option value="">Select Category</option>
+                                        <option value="Seeds">Seeds</option>
+                                        <option value="Fertilizers">Fertilizers</option>
+                                        <option value="Machinery">Machinery</option>
+                                        <option value="Pesticides">Pesticides</option>
+                                    </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Gross Weight (KG)</label>
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Total Units</label>
                                     <input
                                         type="number"
                                         required
                                         className="w-full px-5 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
-                                        placeholder="0.00"
+                                        placeholder="0"
                                         value={formData.quantity}
                                         onChange={e => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
                                     />
@@ -401,7 +383,7 @@ const FarmerLogistics: React.FC = () => {
 
                             <div className="space-y-4">
                                 <LocationGrid
-                                    label="Origin / Farm Pickup"
+                                    label="Source Warehouse"
                                     value={formData.fromLocation}
                                     onChange={(v: string) => setFormData({ ...formData, fromLocation: v })}
                                     onPickerOpen={() => setActivePicker('fromLocation')}
@@ -410,7 +392,7 @@ const FarmerLogistics: React.FC = () => {
                                 />
 
                                 <LocationGrid
-                                    label="Terminal Destination"
+                                    label="Customer / Retailer Location"
                                     value={formData.toLocation}
                                     onChange={(v: string) => setFormData({ ...formData, toLocation: v })}
                                     onPickerOpen={() => setActivePicker('toLocation')}
@@ -431,7 +413,7 @@ const FarmerLogistics: React.FC = () => {
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Operation Date</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Dispatch Date</label>
                                 <div className="relative">
                                     <input
                                         type="date"
@@ -452,7 +434,7 @@ const FarmerLogistics: React.FC = () => {
                                 {loading ? (
                                     <Activity className="animate-spin" size={20} />
                                 ) : (
-                                    <>Authorize Dispatch <Navigation size={20} /></>
+                                    <>Initiate Supply Chain <Navigation size={20} /></>
                                 )}
                             </button>
                         </form>
@@ -535,4 +517,4 @@ const LocationGrid = ({ label, value, onChange, onPickerOpen, pickerActive, coor
     </div>
 )
 
-export default FarmerLogistics;
+export default VendorLogistics;

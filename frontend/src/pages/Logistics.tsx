@@ -13,20 +13,24 @@ const Logistics: React.FC = () => {
         navigate('/logistics/farmer');
       } else if (user.type === 'transporter') {
         navigate('/logistics/transporter');
+      } else if (user.type === 'vendor') {
+        navigate('/logistics/vendor');
+      } else if (user.type === 'buyer') {
+        navigate('/logistics/buyer');
       }
     }
   }, [isAuthenticated, user, navigate]);
 
   if (isAuthenticated && user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-surface">
+      <div className="h-[calc(100vh-80px)] flex items-center justify-center bg-brand-surface">
         <p className="text-xl text-gray-600">Redirecting to your dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-brand-surface p-8 flex items-center justify-center">
+    <div className="h-[calc(100vh-80px)] bg-brand-surface p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full text-center">
         <p className="page-header__label">Logistics</p>
         <h1 className="page-header__title text-4xl mb-4">

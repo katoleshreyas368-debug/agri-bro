@@ -9,6 +9,8 @@ import InputStore from './pages/InputStore';
 import AIAdvisor from './pages/AIAdvisor';
 import Logistics from './pages/Logistics';
 import FarmerLogistics from './pages/FarmerLogistics';
+import VendorLogistics from './pages/VendorLogistics';
+import RetailerLogistics from './pages/RetailerLogistics';
 import TransporterDashboard from './pages/TransporterDashboard';
 import Community from './pages/Community';
 import Dashboard from './pages/Dashboard';
@@ -27,9 +29,18 @@ function AppContent() {
         <Route path="/" element={<Landing />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/inputs" element={<InputStore />} />
-        <Route path="/advisor" element={<AIAdvisor />} />
+        <Route path="/advisor" element={<AIAdvisor />}>
+          <Route path="chat" element={<AIAdvisor />} />
+          <Route path="chat/:chatId" element={<AIAdvisor />} />
+          <Route path="bookmarks" element={<AIAdvisor />} />
+          <Route path="favorites" element={<AIAdvisor />} />
+          <Route path="trash" element={<AIAdvisor />} />
+          <Route path="community" element={<AIAdvisor />} />
+        </Route>
         <Route path="/logistics" element={<Logistics />} />
         <Route path="/logistics/farmer" element={<FarmerLogistics />} />
+        <Route path="/logistics/vendor" element={<VendorLogistics />} />
+        <Route path="/logistics/buyer" element={<RetailerLogistics />} />
         <Route path="/logistics/transporter" element={<TransporterDashboard />} />
         <Route path="/community" element={<Community />} />
         <Route path="/dashboard" element={<Dashboard />} />

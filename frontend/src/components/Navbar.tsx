@@ -20,7 +20,7 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 font-poppins">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-[2000] font-poppins">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
         <div className="flex justify-between h-20">
           <div className="flex items-center">

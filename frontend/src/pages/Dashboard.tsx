@@ -13,8 +13,7 @@ import {
   Calendar,
   Zap,
   Star,
-  LayoutGrid,
-  MoreHorizontal
+  LayoutGrid
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -75,7 +74,7 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-brand-surface font-poppins text-gray-900 pb-20">
+    <div className="min-h-[calc(100vh-80px)] bg-brand-surface font-poppins text-gray-900 pb-20">
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 pt-12">
 
         {/* ── Top Navigation Bar ── */}
@@ -101,7 +100,7 @@ const Dashboard: React.FC = () => {
 
         {/* ── Visual Stats Summary ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, i) => (
+          {stats.map((stat) => (
             <div key={stat.title} className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-8">
@@ -302,7 +301,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* ── Quick Actions / Floating Command ── */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000]">
           <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center gap-8 shadow-2xl">
             <div className="flex items-center gap-6">
               <button className="flex flex-col items-center gap-1 group">
