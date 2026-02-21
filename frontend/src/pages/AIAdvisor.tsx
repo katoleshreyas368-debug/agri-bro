@@ -1,5 +1,6 @@
 import { Send, Bot, Globe, Search, Plus, Bookmark, Star, Trash2, Users, MoreHorizontal, Settings, MessageSquare, ChevronRight, Paperclip } from "lucide-react";
 import { useState } from "react";
+import ReactMarkdown from 'react-markdown';
 
 const AIAdvisor = () => {
   const [language, setLanguage] = useState("both");
@@ -252,9 +253,9 @@ const AIAdvisor = () => {
                   ? "bg-brand-green text-white rounded-tr-sm shadow-lg shadow-brand-green/10"
                   : "bg-brand-surface text-gray-700 rounded-tl-sm border border-gray-100"
                   }`}>
-                  <p className="text-[14px] leading-relaxed font-medium">
-                    {msg.content}
-                  </p>
+                  <div className={`markdown-content text-[14px] leading-relaxed font-medium ${msg.type === "user" ? "prose-invert" : ""}`}>
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
 
                   <div className={`flex items-center justify-end gap-2 mt-3 pt-3 border-t ${msg.type === "user" ? "border-white/10" : "border-gray-200/50"}`}>
                     <span className={`text-[10px] font-bold uppercase tracking-wider ${msg.type === "user" ? "text-white/60" : "text-gray-400"}`}>
@@ -333,6 +334,43 @@ const AIAdvisor = () => {
         }
         .CustomScrollbar::-webkit-scrollbar-thumb:hover {
           background: #2e7d32;
+        }
+
+        /* Markdown Styling */
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 {
+          font-weight: 800;
+          margin-top: 1rem;
+          margin-bottom: 0.5rem;
+          color: inherit;
+        }
+        .markdown-content p {
+          margin-bottom: 0.75rem;
+        }
+        .markdown-content p:last-child {
+          margin-bottom: 0;
+        }
+        .markdown-content ul, .markdown-content ol {
+          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .markdown-content ul {
+          list-style-type: disc;
+        }
+        .markdown-content ol {
+          list-style-type: decimal;
+        }
+        .markdown-content li {
+          margin-bottom: 0.25rem;
+        }
+        .markdown-content strong {
+          font-weight: 700;
+        }
+        .markdown-content blockquote {
+          border-left: 4px solid #e2e8f0;
+          padding-left: 1rem;
+          color: #64748b;
+          font-style: italic;
+          margin: 1rem 0;
         }
       `}</style>
     </div>
