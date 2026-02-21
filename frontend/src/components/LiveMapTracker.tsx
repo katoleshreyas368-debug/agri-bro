@@ -10,7 +10,7 @@ interface LiveMapTrackerProps {
 
 const LiveMapTracker: React.FC<LiveMapTrackerProps> = ({ status, progress, from, to }) => {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <div className="bg-white p-6 rounded-xl border border-gray-200">
             <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <Truck className="text-blue-600" />
                 Live Shipment Tracking

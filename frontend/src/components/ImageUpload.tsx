@@ -141,7 +141,7 @@ export default function ImageUpload(): JSX.Element {
             src={imageUrl}
             alt="Uploaded"
             width={250}
-            className="rounded shadow-lg mt-2"
+            className="rounded border border-gray-200 mt-2"
           />
           <div className="mt-2 text-sm break-all">{imageUrl}</div>
         </div>

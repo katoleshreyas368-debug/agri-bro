@@ -32,6 +32,8 @@ interface DeliveryRouteMapProps {
     height?: string;
     /** Progress 0–100 for truck tracking. When provided, a truck marker animates along the route. */
     progress?: number;
+    /** Map theme: 'streets', 'satellite', or 'dark'. Defaults to 'streets'. */
+    theme?: 'streets' | 'satellite' | 'dark';
 }
 
 interface Coords { lat: number; lng: number; }
@@ -113,7 +115,7 @@ function FitBounds({ points }: { points: [number, number][] }) {
 }
 
 export default function DeliveryRouteMap({
-    fromLocation, toLocation, label, height = "400px", progress,
+    fromLocation, toLocation, label, height = "400px", progress, theme,
 }: DeliveryRouteMapProps) {
     const [routeData, setRouteData] = useState<RouteData | null>(null);
     const [status, setStatus] = useState<"loading" | "error" | "ready">("loading");
@@ -196,19 +198,19 @@ export default function DeliveryRouteMap({
             <div style={{ height, width: "100%", borderRadius: "12px", overflow: "hidden" }}>
                 <MapContainer center={center} zoom={7} scrollWheelZoom={true} style={{ height: "100%", width: "100%" }}>
                     <LayersControl position="topright">
-                        <LayersControl.BaseLayer checked name="Streets">
+                        <LayersControl.BaseLayer checked={theme === 'streets' || !theme} name="Streets">
                             <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
                                 url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                             />
                         </LayersControl.BaseLayer>
-                        <LayersControl.BaseLayer name="Satellite">
+                        <LayersControl.BaseLayer checked={theme === 'satellite'} name="Satellite">
                             <TileLayer
                                 attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
                                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                             />
                         </LayersControl.BaseLayer>
-                        <LayersControl.BaseLayer name="Dark">
+                        <LayersControl.BaseLayer checked={theme === 'dark'} name="Dark">
                             <TileLayer
                                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
                                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"

@@ -19,24 +19,25 @@ const Logistics: React.FC = () => {
 
   if (isAuthenticated && user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-brand-surface">
         <p className="text-xl text-gray-600">Redirecting to your dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-8 flex items-center justify-center">
+    <div className="min-h-screen bg-brand-surface p-8 flex items-center justify-center">
       <div className="max-w-4xl w-full text-center">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-6">
+        <p className="page-header__label">Logistics</p>
+        <h1 className="page-header__title text-4xl mb-4">
           Agri-Logistics Hub
         </h1>
-        <p className="text-xl text-gray-600 mb-12">
+        <p className="page-header__subtitle text-xl mb-12 mx-auto">
           Please login to access the logistics network.
         </p>
 
         <div className="flex justify-center">
-          <Link to="/login" className="flex items-center gap-2 bg-green-600 text-white px-8 py-4 rounded-full text-xl font-bold hover:bg-green-700 transition shadow-lg">
+          <Link to="/login" className="flex items-center gap-2 bg-brand-green text-white px-8 py-4 rounded-full text-xl font-bold hover:bg-brand-green-dark transition">
             <Lock size={24} /> Login to Continue
           </Link>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, IndianRupee, Package, Calendar, Activity, Link as LinkIcon } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -44,7 +44,6 @@ const AddCropModal: React.FC<AddCropModalProps> = ({ onClose }) => {
     try {
       let imageUrl = formData.imageUrl;
 
-      // Upload image if selected
       if (selectedImage) {
         const formDataWithImage = new FormData();
         formDataWithImage.append('image', selectedImage);
@@ -60,7 +59,6 @@ const AddCropModal: React.FC<AddCropModalProps> = ({ onClose }) => {
           throw new Error(uploadResult.error || 'Failed to upload image');
         }
 
-        // Use the returned URL from Cloudinary
         if (uploadResult.url && String(uploadResult.url).startsWith('http')) {
           imageUrl = uploadResult.url;
         } else if (uploadResult.url) {
@@ -99,106 +97,138 @@ const AddCropModal: React.FC<AddCropModalProps> = ({ onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold">List Your Crop</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <X className="h-6 w-6" />
-          </button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-white rounded-[32px] border border-gray-100 w-full max-w-xl max-h-[90vh] overflow-y-auto relative p-8 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-5 duration-300 CustomScrollbar">
+        <button
+          onClick={onClose}
+          className="absolute top-6 right-6 w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-all z-10"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="mb-8">
+          <span className="text-[10px] font-bold text-brand-green uppercase tracking-[0.3em]">Marketplace Listing</span>
+          <h2 className="text-3xl font-black text-gray-900 mt-1">List Your Crop</h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Crop Name
-            </label>
-            <input
-              type="text"
-              name="name"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="e.g., Wheat, Rice"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Crop Basics */}
+          <div className="bg-gray-50 p-6 rounded-[24px] border border-gray-100 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity
-              </label>
-              <input
-                type="number"
-                name="quantity"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={formData.quantity}
-                onChange={handleChange}
-              />
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Crop Variety</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  className="w-full pl-12 pr-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="e.g. Basmati Rice, Sharbati Wheat"
+                />
+                <Package className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Unit
-              </label>
-              <select
-                name="unit"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                value={formData.unit}
-                onChange={handleChange}
-              >
-                <option value="quintals">Quintals</option>
-                <option value="tons">Tons</option>
-                <option value="kg">Kilograms</option>
-              </select>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Quantity</label>
+                <input
+                  type="number"
+                  name="quantity"
+                  required
+                  className="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Unit</label>
+                <select
+                  name="unit"
+                  className="w-full px-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all cursor-pointer"
+                  value={formData.unit}
+                  onChange={handleChange}
+                >
+                  <option value="quintals">Quintals</option>
+                  <option value="tons">Tons</option>
+                  <option value="kg">Kilograms</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Base Price (₹ per quintal)
-            </label>
-            <input
-              type="number"
-              name="basePrice"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={formData.basePrice}
-              onChange={handleChange}
-            />
+          {/* Pricing & Time */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-brand-green/5 p-6 rounded-[24px] border border-brand-green/10">
+              <label className="block text-[10px] font-bold text-brand-green uppercase tracking-widest mb-2">Base Price (₹)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  name="basePrice"
+                  required
+                  className="w-full pl-12 pr-5 py-3.5 bg-white border border-gray-100 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                  value={formData.basePrice}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                />
+                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-green" size={18} />
+              </div>
+              <p className="text-[10px] text-brand-green/60 mt-2 font-medium">Per selected unit</p>
+            </div>
+
+            <div className="bg-gray-50 p-6 rounded-[24px] border border-gray-100">
+              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Auction End Date</label>
+              <div className="relative">
+                <input
+                  type="datetime-local"
+                  name="endTime"
+                  required
+                  className="w-full pl-12 pr-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all"
+                  value={formData.endTime}
+                  onChange={handleChange}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+              </div>
+            </div>
           </div>
 
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Crop Image
-            </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md">
-              <div className="space-y-1 text-center">
+          {/* Media Section */}
+          <div className="bg-gray-50 p-6 rounded-[24px] border border-gray-100">
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Crop Imagery</label>
+
+            <div className="flex flex-col gap-4">
+              <div className={`relative border-2 border-dashed rounded-[20px] transition-all flex flex-col items-center justify-center p-6 ${imagePreview ? 'border-brand-green bg-brand-green/5' : 'border-gray-200 bg-white hover:border-brand-green/50'
+                }`}>
                 {imagePreview ? (
-                  <div className="relative">
+                  <div className="relative group w-full">
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="mx-auto h-32 w-32 object-cover rounded"
+                      className="w-full h-40 object-cover rounded-xl shadow-lg"
                     />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedImage(null);
-                        setImagePreview(null);
-                      }}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedImage(null);
+                          setImagePreview(null);
+                        }}
+                        className="bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <div>
-                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                    <label className="relative cursor-pointer text-green-600">
-                      <span>Upload a file</span>
+                  <div className="text-center">
+                    <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Upload className="text-gray-400" size={20} />
+                    </div>
+                    <label className="cursor-pointer">
+                      <span className="text-sm font-bold text-brand-green hover:underline">Upload High-Res Photo</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -206,68 +236,67 @@ const AddCropModal: React.FC<AddCropModalProps> = ({ onClose }) => {
                         className="sr-only"
                       />
                     </label>
-                    <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                    <p className="text-[10px] text-gray-400 mt-1">RAW, JPG or PNG (Max 5MB)</p>
                   </div>
                 )}
+              </div>
+
+              <div className="relative">
+                <input
+                  type="url"
+                  name="imageUrl"
+                  className="w-full pl-12 pr-5 py-3.5 bg-white border border-gray-200 rounded-2xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  placeholder="Or paste external image URL..."
+                />
+                <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
               </div>
             </div>
           </div>
 
-          {/* Optional URL input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Or provide image URL (optional)
-            </label>
-            <input
-              type="url"
-              name="imageUrl"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={formData.imageUrl}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Auction End Date
-            </label>
-            <input
-              type="datetime-local"
-              name="endTime"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={formData.endTime}
-              onChange={handleChange}
-              min={new Date().toISOString().slice(0, 16)}
-            />
-          </div>
-
           {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4">
+            <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-xl text-sm flex items-center gap-3">
+              <Activity className="flex-shrink-0" size={18} />
               {error}
             </div>
           )}
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-            >
-              {isSubmitting ? 'Adding...' : 'List Crop'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-brand-green hover:bg-brand-green-dark text-white font-black uppercase tracking-[0.2em] py-5 rounded-2xl transition-all shadow-xl shadow-brand-green/20 disabled:opacity-50 h-16 flex items-center justify-center gap-3 active:scale-[0.98]"
+          >
+            {isSubmitting ? (
+              <>
+                <Activity className="animate-spin" size={20} />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <span>Publish Listing</span>
+                <Package size={20} />
+              </>
+            )}
+          </button>
         </form>
       </div>
+
+      <style>{`
+        .CustomScrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .CustomScrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .CustomScrollbar::-webkit-scrollbar-thumb {
+          background: rgba(0,0,0,0.05);
+          border-radius: 10px;
+        }
+        .CustomScrollbar::-webkit-scrollbar-thumb:hover {
+          background: #2e7d32;
+        }
+      `}</style>
     </div>
   );
 };

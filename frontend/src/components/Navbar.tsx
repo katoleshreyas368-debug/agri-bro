@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Leaf, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar: React.FC = () => {
@@ -20,57 +20,58 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 font-poppins">
+      <div className="max-w-[1400px] mx-auto px-6 lg:px-12">
+        <div className="flex justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <Leaf className="h-8 w-8 text-green-600" />
-              <span className="text-2xl font-bold text-gray-900">AGRIBro</span>
+            <Link to="/" className="flex items-center gap-3 no-underline group">
+              <span className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center text-xl shadow-lg shadow-brand-green/20 group-hover:scale-110 transition-transform">
+                🌿
+              </span>
+              <span className="text-xl font-black text-gray-900 tracking-tight">AgriBro</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive(item.href)
-                    ? 'text-green-600 bg-green-50'
-                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                className={`text-[13px] font-bold uppercase tracking-widest transition-all duration-300 relative py-1 group ${isActive(item.href) ? 'text-brand-green' : 'text-gray-500 hover:text-brand-green'
                   }`}
               >
                 {item.name}
+                <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-brand-green transform origin-left transition-transform duration-300 ${isActive(item.href) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`} />
               </Link>
             ))}
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center gap-6">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-4">
                 <Link
                   to="/dashboard"
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-gray-50 text-gray-700 hover:bg-brand-green-light hover:text-brand-green transition-all"
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-3.5 w-3.5" />
                   <span>{user?.name}</span>
                 </Link>
                 <button
                   onClick={logout}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[12px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-all"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-3.5 w-3.5" />
                   <span>Logout</span>
                 </button>
               </div>
             ) : (
               <Link
                 to="/login"
-                className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 transition-colors"
+                className="bg-brand-green text-white px-8 py-3 rounded-full text-[12px] font-black uppercase tracking-widest hover:bg-brand-green-dark hover:scale-105 transition-all shadow-lg shadow-brand-green/20"
               >
-                Login
+                Get Started
               </Link>
             )}
           </div>
@@ -79,7 +80,7 @@ const Navbar: React.FC = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-green-600 focus:outline-none focus:text-green-600"
+              className="p-2 text-gray-700 hover:text-brand-green hover:bg-brand-green-light rounded-xl transition-all"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -89,15 +90,13 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
+        <div className="md:hidden border-t border-gray-100 bg-white/80 backdrop-blur-xl">
+          <div className="px-6 py-8 space-y-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${isActive(item.href)
-                    ? 'text-green-600 bg-green-50'
-                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                className={`block text-sm font-bold uppercase tracking-widest transition-all ${isActive(item.href) ? 'text-brand-green' : 'text-gray-500 hover:text-brand-green'
                   }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -105,32 +104,34 @@ const Navbar: React.FC = () => {
               </Link>
             ))}
             {isAuthenticated ? (
-              <div className="border-t pt-2">
+              <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
                 <Link
                   to="/dashboard"
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-green-600 hover:bg-green-50"
+                  className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-gray-700"
                   onClick={() => setIsOpen(false)}
                 >
-                  Dashboard ({user?.name})
+                  <User size={18} />
+                  <span>Dashboard ({user?.name})</span>
                 </Link>
                 <button
                   onClick={() => {
                     logout();
                     setIsOpen(false);
                   }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-3 w-full text-left text-sm font-bold uppercase tracking-widest text-red-500"
                 >
-                  Logout
+                  <LogOut size={18} />
+                  <span>Logout</span>
                 </button>
               </div>
             ) : (
-              <div className="border-t pt-2">
+              <div className="pt-6 mt-6 border-t border-gray-100">
                 <Link
                   to="/login"
-                  className="block px-3 py-2 rounded-md text-base font-medium bg-green-600 text-white hover:bg-green-700"
+                  className="block w-full text-center bg-brand-green text-white py-4 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg shadow-brand-green/20"
                   onClick={() => setIsOpen(false)}
                 >
-                  Login
+                  Get Started
                 </Link>
               </div>
             )}

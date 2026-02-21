@@ -92,7 +92,7 @@ export default function InlineLocationPicker({ onConfirm, onCancel, initialLat, 
     const indiaCenter: [number, number] = [20.5937, 78.9629];
 
     return (
-        <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white w-full">
+        <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden bg-white w-full">
             <div style={{ height: "300px", position: "relative" }} className="w-full">
                 <MapContainer
                     center={selectedPos || indiaCenter}
@@ -147,7 +147,7 @@ export default function InlineLocationPicker({ onConfirm, onCancel, initialLat, 
                     <button
                         onClick={handleConfirm}
                         disabled={!placeName || loading}
-                        className="px-4 py-1.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        className="px-4 py-1.5 text-sm font-semibold text-white bg-green-600 hover:bg-green-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                     >
                         <Check size={16} /> Confirm
                     </button>

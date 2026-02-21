@@ -1,3 +1,72 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        color: #222;
+        overflow-x: hidden;
+    }
+}
+
+@layer components {
+
+    /* ── Page Header (matches Landing SectionHeading) ── */
+    .page-header__label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #2e7d32;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 6px;
+    }
+
+    .page-header__title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        line-height: 1.2;
+        margin: 0;
+    }
+
+    .page-header__subtitle {
+        font-size: 0.95rem;
+        color: #666;
+        margin-top: 8px;
+    }
+
+    /* ── Card Accent Bar (matches Landing service-card) ── */
+    .card-accent {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.35s ease;
+    }
+
+    .card-accent::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: #2e7d32;
+        transform: scaleX(0);
+        transition: transform 0.35s ease;
+    }
+
+    .card-accent:hover::after {
+        transform: scaleX(1);
+    }
+
+    .card-accent:hover {
+        border-color: #2e7d32;
+    }
+}
