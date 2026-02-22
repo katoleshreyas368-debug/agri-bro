@@ -15,7 +15,9 @@ import TransporterDashboard from './pages/TransporterDashboard';
 import Community from './pages/Community';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import ImageUpload from "./components/ImageUpload";
+import ProtectedRoute from './components/ProtectedRoute';
 
 function AppContent() {
   const location = useLocation();
@@ -43,9 +45,29 @@ function AppContent() {
         <Route path="/logistics/buyer" element={<RetailerLogistics />} />
         <Route path="/logistics/transporter" element={<TransporterDashboard />} />
         <Route path="/community" element={<Community />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        {/* Public Routes */}
         <Route path="/login" element={<Login />} />
-        <Route path="/upload" element={<ImageUpload />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* Protected Dashboard Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['farmer']} />}>
+          <Route path="/dashboard/farmer" element={<Dashboard />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={['vendor']} />}>
+          <Route path="/dashboard/vendor" element={<Dashboard />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={['buyer']} />}>
+          <Route path="/dashboard/buyer" element={<Dashboard />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRoles={['transporter']} />}>
+          <Route path="/dashboard/transporter" element={<Dashboard />} />
+        </Route>
+
+        {/* Fallback dashboard route, redirects based on role */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<ImageUpload />} />
+        </Route>
       </Routes>
     </div>
   );

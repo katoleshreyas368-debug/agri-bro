@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -7,6 +7,12 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -59,7 +65,7 @@ const Navbar: React.FC = () => {
                   <span>{user?.name}</span>
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[12px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-all"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -115,7 +121,7 @@ const Navbar: React.FC = () => {
                 </Link>
                 <button
                   onClick={() => {
-                    logout();
+                    handleLogout();
                     setIsOpen(false);
                   }}
                   className="flex items-center gap-3 w-full text-left text-sm font-bold uppercase tracking-widest text-red-500"

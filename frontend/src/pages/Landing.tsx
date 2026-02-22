@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from '../contexts/AuthContext';
 import SectionHeading from "../components/landing/SectionHeading";
 import ServiceCard from "../components/landing/ServiceCard";
 import TeamMemberCard from "../components/landing/TeamMemberCard";
@@ -74,6 +75,15 @@ const blogs = [
 // ─── COMPONENT ────────────────────────────────────────────
 const Landing: React.FC = () => {
   const [heroIdx, setHeroIdx] = useState(0);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is already logged in, redirect to their role dashboard
+    if (user) {
+      navigate(`/dashboard/${user.type}`, { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const t = setInterval(() => setHeroIdx((p) => (p + 1) % heroImages.length), 5000);

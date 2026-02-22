@@ -1,10 +1,8 @@
-import React, { Suspense, useMemo } from 'react';
+import React, { Suspense, useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-  TrendingUp,
   ShoppingCart,
-  MessageCircle,
   Truck,
-  DollarSign,
   Package,
   Activity,
   ArrowUpRight,
@@ -13,65 +11,75 @@ import {
   Calendar,
   Zap,
   Star,
-  LayoutGrid
+  LayoutGrid,
+  Store
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useData } from '../contexts/DataContext';
 
 const AgriMap = React.lazy(() => import('../components/AgriMap'));
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
-  const { crops, logisticsRequests, communityPosts } = useData();
+  const { user, token } = useAuth();
+  const navigate = useNavigate();
+  const [history, setHistory] = useState<any>(null);
 
-  const userCrops = useMemo(() => crops.filter(crop => crop.farmerId === user?.id), [crops, user]);
-  const userLogistics = useMemo(() => logisticsRequests.filter(req => req.farmerId === user?.id), [logisticsRequests, user]);
-  const userPosts = useMemo(() => communityPosts.filter(post => post.authorId === user?.id), [communityPosts, user]);
+  useEffect(() => {
+    // If user accesses /dashboard, redirect to their specific dashboard
+    if (user && window.location.pathname === '/dashboard') {
+      navigate(`/dashboard/${user.type}`, { replace: true });
+    }
+  }, [user, navigate]);
 
-  const totalEarnings = useMemo(() => userCrops.reduce((sum, crop) => {
-    return crop.status === 'completed' ? sum + (crop.currentBid * crop.quantity) : sum;
-  }, 0), [userCrops]);
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const API = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+        const res = await fetch(`${API}/auth/history`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setHistory(data.history);
+        }
+      } catch (err) {
+        console.error('Failed to fetch history', err);
+      }
+    };
+    if (token) fetchHistory();
+  }, [token]);
+
+  const stats = useMemo(() => {
+    if (!history || !user) return [];
+
+    if (user.type === 'farmer') {
+      const activeCrops = history.crops?.filter((c: any) => c.status === 'active')?.length || 0;
+      return [
+        { title: 'Active Listings', value: activeCrops, trend: 'Market', icon: Package, color: 'text-brand-green', iconBg: 'bg-brand-green-light', label: 'Produce' },
+        { title: 'Logistics Queue', value: history.logisticsRequests?.length || 0, trend: 'System', icon: Truck, color: 'text-purple-500', iconBg: 'bg-purple-50', label: 'In Transit' },
+        { title: 'Inputs Bought', value: history.inputsBought?.length || 0, trend: 'Orders', icon: ShoppingCart, color: 'text-blue-500', iconBg: 'bg-blue-50', label: 'Purchases' }
+      ];
+    } else if (user.type === 'vendor') {
+      return [
+        { title: 'Store Items', value: history.inputs?.length || 0, trend: 'Selling', icon: Store, color: 'text-brand-green', iconBg: 'bg-brand-green-light', label: 'Inventory' }
+      ];
+    } else if (user.type === 'buyer') {
+      return [
+        { title: 'Purchased Crops', value: history.cropsBought?.length || 0, trend: 'Done', icon: Package, color: 'text-brand-green', iconBg: 'bg-brand-green-light', label: 'Orders' },
+        { title: 'Logistics Requests', value: history.logisticsRequests?.length || 0, trend: 'Routes', icon: Truck, color: 'text-purple-500', iconBg: 'bg-purple-50', label: 'Shipping' }
+      ];
+    } else if (user.type === 'transporter') {
+      return [
+        { title: 'Assigned Jobs', value: history.logisticsRequests?.length || 0, trend: 'Pending', icon: Truck, color: 'text-brand-green', iconBg: 'bg-brand-green-light', label: 'Deliveries' }
+      ];
+    }
+    return [];
+  }, [history, user]);
 
   if (!user) return null;
 
-  const stats = [
-    {
-      title: 'Gross Revenue',
-      value: `₹${totalEarnings.toLocaleString()}`,
-      trend: '+12.5%',
-      icon: DollarSign,
-      color: 'text-brand-green',
-      iconBg: 'bg-brand-green-light',
-      label: 'Financial Performance'
-    },
-    {
-      title: 'Active Auctions',
-      value: userCrops.filter(c => c.status === 'active').length,
-      trend: '+2 new',
-      icon: TrendingUp,
-      color: 'text-blue-500',
-      iconBg: 'bg-blue-50',
-      label: 'Market Presence'
-    },
-    {
-      title: 'Logistics Queue',
-      value: userLogistics.length,
-      trend: '3 In-Transit',
-      icon: Truck,
-      color: 'text-purple-500',
-      iconBg: 'bg-purple-50',
-      label: 'Operation Sync'
-    },
-    {
-      title: 'Feed Engagement',
-      value: userPosts.length,
-      trend: '+45 reads',
-      icon: MessageCircle,
-      color: 'text-orange-500',
-      iconBg: 'bg-orange-50',
-      label: 'Network Strength'
-    }
-  ];
+  // Old duplicate stats block removed
 
   return (
     <div className="min-h-[calc(100vh-80px)] bg-brand-surface font-poppins text-gray-900 pb-20">
@@ -83,11 +91,11 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center gap-3 mb-2">
               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-green bg-brand-green-light px-3 py-1 rounded-full">System Active</span>
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none flex items-center gap-2">
-                <Calendar size={12} className="text-gray-300" /> February 2026
+                <Calendar size={12} className="text-gray-300" /> {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-gray-950">Wellness <span className="text-brand-green">Insights</span></h1>
-            <p className="text-sm text-gray-400 font-medium mt-1">Track your agricultural journey and discover productivity patterns.</p>
+            <h1 className="text-4xl font-black tracking-tight text-gray-950">Welcome, <span className="text-brand-green">{user.name}</span>!</h1>
+            <p className="text-sm text-gray-400 font-medium mt-1 uppercase tracking-widest">{user.type} Dashboard</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -274,14 +282,14 @@ const Dashboard: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-8">
                         <div>
-                          <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Total Deliveries</p>
-                          <p className="text-4xl font-black tracking-tight text-white">{userLogistics.length}</p>
-                          <p className="text-[10px] font-medium text-white/40 mt-1 uppercase tracking-widest">Matched Today</p>
+                          <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Items Processed</p>
+                          <p className="text-4xl font-black tracking-tight text-white">{history?.crops?.length || history?.inputs?.length || history?.logisticsRequests?.length || 0}</p>
+                          <p className="text-[10px] font-medium text-white/40 mt-1 uppercase tracking-widest">Recorded</p>
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Total Flight Time</p>
-                          <p className="text-4xl font-black tracking-tight text-white">120 <span className="text-sm font-bold text-white/50 uppercase tracking-widest">HRS</span></p>
-                          <p className="text-[10px] font-medium text-white/40 mt-1 uppercase tracking-widest">Transporter Active</p>
+                          <p className="text-xs font-bold text-white/60 uppercase tracking-widest mb-1">Actions</p>
+                          <p className="text-4xl font-black tracking-tight text-white">READY</p>
+                          <p className="text-[10px] font-medium text-white/40 mt-1 uppercase tracking-widest">Standing By</p>
                         </div>
                       </div>
                     </div>

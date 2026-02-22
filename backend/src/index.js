@@ -13,6 +13,7 @@ const communityRoutes = require('./routes/community');
 const healthRoutes = require('./routes/health');
 const uploadRoutes = require('./routes/upload');
 const chatRoutes = require('./routes/chat');
+const predictRoutes = require('./routes/predict');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,7 @@ app.use('/community', communityRoutes);
 app.use('/health', healthRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/chat', chatRoutes);
+app.use('/api/predict', predictRoutes); // as requested
 app.use('/uploads', express.static('public/uploads'));
 
 app.get('/', (req, res) => {
@@ -81,10 +83,18 @@ if (require.main === module) {
 
   // Pre-warm the embedding model so first chat request is fast
   const { getEmbedding } = require('../rag/embeddings');
+  const { loadModel } = require('../ml/loadModel');
+
   getEmbedding('warmup').then(() => {
     console.log('Embedding model pre-warmed successfully');
   }).catch((err) => {
     console.error('Embedding model pre-warm failed:', err.message);
+  });
+
+  loadModel().then(() => {
+    console.log('TFJS model loaded at startup successfully');
+  }).catch((err) => {
+    console.error('TFJS model load failed:', err.message);
   });
 
   process.on('uncaughtException', (err) => {

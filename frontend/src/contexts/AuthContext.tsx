@@ -11,7 +11,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (user: Omit<User, 'id'>) => void;
+  login: (credentials: { email?: string; phone?: string; password: string }) => Promise<User>;
+  signup: (user: Omit<User, 'id'> & { password: string; email?: string; photo?: string }) => Promise<User>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -33,15 +34,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const API = import.meta.env.VITE_API_URL || 'http://localhost:5001'; // Standardized port
 
-  const login = async (userData: Omit<User, 'id'>) => {
-    // Send to backend to create or fetch user
+  const login = async (credentials: { email?: string; phone?: string; password: string }) => {
     try {
       const res = await fetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+      if (!res.ok) {
+        let errData;
+        try { errData = await res.json(); } catch { errData = {}; }
+        throw new Error(errData.error || 'Failed to login');
+      }
+      const { user, token } = await res.json();
+      setUser(user);
+      setToken(token);
+      localStorage.setItem('agribro_user', JSON.stringify(user));
+      localStorage.setItem('agribro_token', token);
+      return user;
+    } catch (err: any) {
+      console.error('Login error', err);
+      throw err;
+    }
+  };
+
+  const signup = async (userData: Omit<User, 'id'> & { password: string }) => {
+    try {
+      const res = await fetch(`${API}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
-      if (!res.ok) throw new Error('Failed to login');
+      if (!res.ok) {
+        let errData;
+        try { errData = await res.json(); } catch { errData = {}; }
+        throw new Error(errData.error || 'Failed to sign up');
+      }
       const { user, token } = await res.json();
       setUser(user);
       setToken(token);
@@ -49,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('agribro_token', token);
       return user;
     } catch (err) {
-      console.error('Login error', err);
+      console.error('Signup error', err);
       throw err;
     }
   };
@@ -65,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       login,
+      signup,
       logout,
       token,
       isAuthenticated: !!user

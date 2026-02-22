@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Phone, MapPin, ChevronDown, Globe } from 'lucide-react';
+import { Mail, Lock, ChevronDown, Globe } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    location: '',
-    userType: 'farmer' as 'farmer' | 'buyer' | 'vendor' | 'transporter'
+    identifier: '', // email or phone
+    password: ''
   });
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -20,24 +18,28 @@ const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const userPayload = {
-      name: formData.name,
-      phone: formData.phone,
-      location: formData.location,
-      type: formData.userType
+
+    // Determine if identifier is email or phone
+    const identifier = formData.identifier.trim();
+    const isEmail = identifier.includes('@');
+    const credentials = {
+      password: formData.password,
+      ...(isEmail ? { email: identifier } : { phone: identifier })
     };
+
     try {
-      await login(userPayload);
-      navigate('/dashboard');
-    } catch (err) {
+      const user = await login(credentials);
+      // Redirect based on role
+      navigate(`/dashboard/${user.type}`);
+    } catch (err: any) {
       console.error(err);
-      setError('Failed to login. Please try again.');
+      setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -50,7 +52,6 @@ const Login: React.FC = () => {
       <div className="w-full lg:w-[45%] flex flex-col p-8 lg:p-12 overflow-y-auto CustomScrollbar">
         {/* Header */}
         <div className="flex items-center justify-end mb-16">
-
           <div className="flex items-center space-x-6">
             <button className="flex items-center space-x-2 text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors border border-gray-100 px-3 py-2 rounded-xl">
               <Globe size={14} />
@@ -63,81 +64,46 @@ const Login: React.FC = () => {
         {/* Content */}
         <div className="max-w-md mx-auto w-full flex-1 flex flex-col justify-center">
           <div className="mb-10">
-            <h1 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">Join AGRIBro</h1>
-            <p className="text-sm text-gray-400 font-medium">Let's start with some basic info about you.</p>
+            <h1 className="text-4xl font-black text-gray-900 mb-3 tracking-tight">Welcome Back</h1>
+            <p className="text-sm text-gray-400 font-medium">Log in to your AGRIBro account.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-brand-green transition-colors" />
-                  <input
-                    name="name"
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Talha Aizan"
-                    className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-medium focus:bg-white focus:border-brand-green/20 focus:ring-4 focus:ring-brand-green/5 outline-none transition-all placeholder:text-gray-300"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
-                <div className="relative group">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-brand-green transition-colors" />
-                  <input
-                    name="phone"
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+880 1..."
-                    className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-medium focus:bg-white focus:border-brand-green/20 focus:ring-4 focus:ring-brand-green/5 outline-none transition-all placeholder:text-gray-300"
-                  />
-                </div>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Location of Residence</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email or Phone Number</label>
               <div className="relative group">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-brand-green transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-brand-green transition-colors" />
                 <input
-                  name="location"
+                  name="identifier"
                   type="text"
                   required
-                  value={formData.location}
+                  value={formData.identifier}
                   onChange={handleChange}
-                  placeholder="Dhaka, Bangladesh"
+                  placeholder="example@mail.com or +880..."
                   className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-medium focus:bg-white focus:border-brand-green/20 focus:ring-4 focus:ring-brand-green/5 outline-none transition-all placeholder:text-gray-300"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Sector / User Category</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password</label>
               <div className="relative group">
-                <select
-                  name="userType"
-                  value={formData.userType}
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-brand-green transition-colors" />
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
                   onChange={handleChange}
-                  className="w-full h-12 px-5 bg-gray-50 border border-transparent rounded-2xl text-sm font-medium appearance-none focus:bg-white focus:border-brand-green/20 focus:ring-4 focus:ring-brand-green/5 outline-none transition-all cursor-pointer"
-                >
-                  <option value="farmer">Farmer / Producer</option>
-                  <option value="buyer">Buyer / Retailer</option>
-                  <option value="vendor">Input Vendor</option>
-                  <option value="transporter">Logistics / Transporter</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 pointer-events-none" />
+                  placeholder="••••••••"
+                  className="w-full h-12 pl-12 pr-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-medium focus:bg-white focus:border-brand-green/20 focus:ring-4 focus:ring-brand-green/5 outline-none transition-all placeholder:text-gray-300"
+                />
               </div>
             </div>
 
             {error && <p className="text-xs text-red-500 font-bold ml-1">{error}</p>}
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-4">
               <button
                 type="submit"
                 disabled={loading}
@@ -146,12 +112,18 @@ const Login: React.FC = () => {
                 {loading ? (
                   <Activity className="animate-spin mx-auto h-5 w-5" />
                 ) : (
-                  'Sign Up'
+                  'Login'
                 )}
               </button>
-              <p className="text-center text-xs text-gray-400 mt-6 font-medium">
-                Already have an account? <Link to="/login" className="text-gray-900 font-bold hover:underline">Login</Link>
-              </p>
+
+              <div className="flex justify-between items-center text-xs font-medium">
+                <button type="button" className="text-gray-400 hover:text-gray-900 font-bold transition-colors">
+                  Forgot Password?
+                </button>
+                <div className="text-gray-400">
+                  Don't have an account? <Link to="/signup" className="text-gray-900 font-bold hover:underline">Sign Up</Link>
+                </div>
+              </div>
             </div>
           </form>
         </div>
@@ -173,7 +145,7 @@ const Login: React.FC = () => {
 
         <div className="absolute top-12 right-12 flex items-center space-x-4">
           <span className="text-[10px] font-bold uppercase tracking-widest text-white/60">New here?</span>
-          <Link to="/login" className="px-6 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-white hover:text-gray-900 transition-all">
+          <Link to="/signup" className="px-6 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-white hover:text-gray-900 transition-all">
             Join us
           </Link>
         </div>
