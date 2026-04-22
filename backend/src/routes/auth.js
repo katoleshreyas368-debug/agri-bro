@@ -246,4 +246,208 @@ router.get('/history', requireAuth, async (req, res) => {
   }
 });
 
+// GET /auth/dashboard-stats - compute dashboard analytics from user's history
+router.get('/dashboard-stats', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const type = req.user.type;
+
+    // Gather all relevant items with timestamps
+    let allItems = [];
+    let itemsByName = {};
+    let patterns = [];
+
+    if (await isMongoEnabled()) {
+      if (type === 'farmer') {
+        const crops = (await mongoFind('crops', { farmerId: userId })) || [];
+        const logistics = (await mongoFind('logistics', { farmerId: userId })) || [];
+        const inputsBought = (await mongoFind('inputs', { buyerId: userId })) || [];
+        allItems = [
+          ...crops.map(c => ({ ...c, _type: 'crop', _ts: c.endTime || c.createdAt })),
+          ...logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt })),
+          ...inputsBought.map(i => ({ ...i, _type: 'input', _ts: i.createdAt }))
+        ];
+        // Market distribution: top crop names
+        crops.forEach(c => { itemsByName[c.name] = (itemsByName[c.name] || 0) + 1; });
+        // Patterns
+        const activeCrops = crops.filter(c => c.status === 'active').length;
+        const completedTrades = crops.filter(c => c.tradeStatus === 'confirmed').length;
+        const matchedLogistics = logistics.filter(l => l.status === 'matched' || l.status === 'completed').length;
+        patterns = [
+          { id: 1, title: 'Harvest Optimization', count: `${activeCrops} Active`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Logistics Efficiency', count: matchedLogistics > 0 ? 'Matched' : 'Pending', color: 'bg-blue-400' },
+          { id: 3, title: 'Trade Success', count: completedTrades > 0 ? `${completedTrades} Done` : 'Open', color: 'bg-red-400' }
+        ];
+      } else if (type === 'buyer') {
+        const cropsBought = (await mongoFind('crops', { buyerId: userId })) || [];
+        const logistics = (await mongoFind('logistics', { buyerId: userId })) || [];
+        allItems = [
+          ...cropsBought.map(c => ({ ...c, _type: 'crop', _ts: c.acceptedAt || c.createdAt })),
+          ...logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt }))
+        ];
+        cropsBought.forEach(c => { itemsByName[c.name] = (itemsByName[c.name] || 0) + 1; });
+        const confirmedTrades = cropsBought.filter(c => c.tradeStatus === 'confirmed').length;
+        const pendingTrades = cropsBought.filter(c => c.tradeStatus === 'accepted').length;
+        patterns = [
+          { id: 1, title: 'Purchase Activity', count: `${cropsBought.length} Total`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Pending Trades', count: pendingTrades > 0 ? `${pendingTrades} Pending` : 'None', color: 'bg-blue-400' },
+          { id: 3, title: 'Confirmed Trades', count: confirmedTrades > 0 ? `${confirmedTrades} Done` : 'Open', color: 'bg-red-400' }
+        ];
+      } else if (type === 'vendor') {
+        const inputs = (await mongoFind('inputs', { vendorId: userId })) || [];
+        allItems = inputs.map(i => ({ ...i, _type: 'input', _ts: i.createdAt }));
+        inputs.forEach(i => { itemsByName[i.name] = (itemsByName[i.name] || 0) + 1; });
+        const inStockCount = inputs.filter(i => i.inStock !== false).length;
+        patterns = [
+          { id: 1, title: 'Inventory Management', count: `${inputs.length} Items`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Stock Status', count: `${inStockCount} In Stock`, color: 'bg-blue-400' },
+          { id: 3, title: 'Categories', count: `${new Set(inputs.map(i => i.category)).size} Types`, color: 'bg-red-400' }
+        ];
+      } else if (type === 'transporter') {
+        const logistics = (await mongoFind('logistics', { driverId: userId })) || [];
+        allItems = logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt }));
+        logistics.forEach(l => { itemsByName[l.cropType || 'Delivery'] = (itemsByName[l.cropType || 'Delivery'] || 0) + 1; });
+        const completedJobs = logistics.filter(l => l.status === 'completed').length;
+        const pendingJobs = logistics.filter(l => l.status === 'pending').length;
+        patterns = [
+          { id: 1, title: 'Delivery Volume', count: `${logistics.length} Jobs`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Completion Rate', count: completedJobs > 0 ? `${completedJobs} Done` : 'Idle', color: 'bg-blue-400' },
+          { id: 3, title: 'Pending Queue', count: pendingJobs > 0 ? `${pendingJobs} Pending` : 'Clear', color: 'bg-red-400' }
+        ];
+      }
+    } else {
+      // JSON DB fallback
+      const db = await readDB();
+      if (type === 'farmer') {
+        const crops = (db.crops || []).filter(c => c.farmerId === userId);
+        const logistics = (db.logistics || []).filter(l => l.farmerId === userId);
+        allItems = [
+          ...crops.map(c => ({ ...c, _type: 'crop', _ts: c.endTime || c.createdAt })),
+          ...logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt }))
+        ];
+        crops.forEach(c => { itemsByName[c.name] = (itemsByName[c.name] || 0) + 1; });
+        const activeCrops = crops.filter(c => c.status === 'active').length;
+        const completedTrades = crops.filter(c => c.tradeStatus === 'confirmed').length;
+        const matchedLogistics = logistics.filter(l => l.status === 'matched' || l.status === 'completed').length;
+        patterns = [
+          { id: 1, title: 'Harvest Optimization', count: `${activeCrops} Active`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Logistics Efficiency', count: matchedLogistics > 0 ? 'Matched' : 'Pending', color: 'bg-blue-400' },
+          { id: 3, title: 'Trade Success', count: completedTrades > 0 ? `${completedTrades} Done` : 'Open', color: 'bg-red-400' }
+        ];
+      } else if (type === 'vendor') {
+        const inputs = (db.inputs || []).filter(i => i.vendorId === userId);
+        allItems = inputs.map(i => ({ ...i, _type: 'input', _ts: i.createdAt }));
+        inputs.forEach(i => { itemsByName[i.name] = (itemsByName[i.name] || 0) + 1; });
+        const inStockCount = inputs.filter(i => i.inStock !== false).length;
+        patterns = [
+          { id: 1, title: 'Inventory Management', count: `${inputs.length} Items`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Stock Status', count: `${inStockCount} In Stock`, color: 'bg-blue-400' },
+          { id: 3, title: 'Categories', count: `${new Set(inputs.map(i => i.category)).size} Types`, color: 'bg-red-400' }
+        ];
+      } else if (type === 'transporter') {
+        const logistics = (db.logistics || []).filter(l => l.driverId === userId);
+        allItems = logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt }));
+        logistics.forEach(l => { itemsByName[l.cropType || 'Delivery'] = (itemsByName[l.cropType || 'Delivery'] || 0) + 1; });
+        const completedJobs = logistics.filter(l => l.status === 'completed').length;
+        const pendingJobs = logistics.filter(l => l.status === 'pending').length;
+        patterns = [
+          { id: 1, title: 'Delivery Volume', count: `${logistics.length} Jobs`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Completion Rate', count: completedJobs > 0 ? `${completedJobs} Done` : 'Idle', color: 'bg-blue-400' },
+          { id: 3, title: 'Pending Queue', count: pendingJobs > 0 ? `${pendingJobs} Pending` : 'Clear', color: 'bg-red-400' }
+        ];
+      } else if (type === 'buyer') {
+        const cropsBought = (db.crops || []).filter(c => c.acceptedBuyerId === userId);
+        const logistics = (db.logistics || []).filter(l => l.buyerId === userId);
+        allItems = [
+          ...cropsBought.map(c => ({ ...c, _type: 'crop', _ts: c.acceptedAt || c.createdAt })),
+          ...logistics.map(l => ({ ...l, _type: 'logistics', _ts: l.requestedDate || l.createdAt }))
+        ];
+        cropsBought.forEach(c => { itemsByName[c.name] = (itemsByName[c.name] || 0) + 1; });
+        const confirmedTrades = cropsBought.filter(c => c.tradeStatus === 'confirmed').length;
+        const pendingTrades = cropsBought.filter(c => c.tradeStatus === 'accepted').length;
+        patterns = [
+          { id: 1, title: 'Purchase Activity', count: `${cropsBought.length} Total`, color: 'bg-yellow-400' },
+          { id: 2, title: 'Pending Trades', count: pendingTrades > 0 ? `${pendingTrades} Pending` : 'None', color: 'bg-blue-400' },
+          { id: 3, title: 'Confirmed Trades', count: confirmedTrades > 0 ? `${confirmedTrades} Done` : 'Open', color: 'bg-red-400' }
+        ];
+      }
+    }
+
+    // ── Compute Weekly Activity (past 7 days, ending today) ──
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const now = new Date();
+    const weekActivity = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+      const count = allItems.filter(item => {
+        const ts = new Date(item._ts);
+        return ts >= dayStart && ts < dayEnd;
+      }).length;
+      weekActivity.push({ day: days[d.getDay()], count });
+    }
+    const maxCount = Math.max(...weekActivity.map(w => w.count), 1);
+    const weekBars = weekActivity.map(w => ({
+      day: w.day,
+      count: w.count,
+      height: `${Math.max(Math.round((w.count / maxCount) * 100), 5)}%`
+    }));
+
+    // ── Peak change from last week ──
+    const thisWeekTotal = weekActivity.reduce((sum, w) => sum + w.count, 0);
+    // Simple peak indicator
+    const peakChange = thisWeekTotal > 0 ? `+${thisWeekTotal} items` : 'No activity';
+
+    // ── Market Distribution (top 5 items by name) ──
+    const totalItems = Object.values(itemsByName).reduce((a, b) => a + b, 0);
+    const colors = ['bg-brand-green', 'bg-blue-500', 'bg-red-500', 'bg-yellow-500', 'bg-purple-500'];
+    const marketDistribution = Object.entries(itemsByName)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count], idx) => ({
+        name,
+        value: totalItems > 0 ? `${Math.round((count / totalItems) * 100)}%` : '0%',
+        count: `${count} ${count === 1 ? 'listing' : 'listings'}`,
+        color: colors[idx] || 'bg-gray-400'
+      }));
+
+    // ── Peak Productivity Window (hour with most activity) ──
+    const hourBuckets = new Array(24).fill(0);
+    allItems.forEach(item => {
+      const ts = new Date(item._ts);
+      if (!isNaN(ts.getTime())) {
+        hourBuckets[ts.getHours()]++;
+      }
+    });
+    const peakHour = hourBuckets.indexOf(Math.max(...hourBuckets));
+    const peakEndHour = (peakHour + 3) % 24; // 3-hour window
+    const formatHour = (h) => {
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 || 12;
+      return `${hour12}:00 ${ampm}`;
+    };
+    const peakLabel = Math.max(...hourBuckets) > 0
+      ? (peakHour >= 5 && peakHour < 12 ? 'Morning Cycle' : peakHour >= 12 && peakHour < 17 ? 'Afternoon Cycle' : peakHour >= 17 && peakHour < 21 ? 'Evening Cycle' : 'Night Cycle')
+      : 'No Data Yet';
+    const peakTime = Math.max(...hourBuckets) > 0
+      ? `${formatHour(peakHour)} — ${formatHour(peakEndHour)}`
+      : 'Start listing to track';
+    const peakFocus = Math.max(...hourBuckets) > 0 ? 'High Focus' : 'Awaiting Data';
+
+    res.json({
+      weekBars,
+      peakChange,
+      marketDistribution,
+      patterns,
+      peakProductivity: { label: peakLabel, time: peakTime, focus: peakFocus },
+      totalItems: allItems.length
+    });
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+    res.status(500).json({ error: 'internal_server_error' });
+  }
+});
+
 module.exports = router;

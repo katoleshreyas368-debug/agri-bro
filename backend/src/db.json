@@ -55,6 +55,46 @@
       "phone": "000-LOG",
       "location": "",
       "type": "farmer"
+    },
+    {
+      "id": "mnouq74f8j2lvn",
+      "name": "Sanchit Kulkarni",
+      "phone": "9999900123",
+      "email": "sanchitkularni2004@gmail.com",
+      "password": "$2b$10$NEew63UkXyreon7ALZLNge3zOy2YTyV8miJWyqIEZJsmB4onalZ8G",
+      "location": "Mumbai",
+      "type": "farmer",
+      "photo": null
+    },
+    {
+      "id": "mnoutsqrwr9rz7",
+      "name": "Sanchit Test",
+      "phone": "9876543210",
+      "email": "sanchitkularni.test@gmail.com",
+      "password": "$2b$10$NEew63UkXyreon7ALZLNge3zOy2YTyV8miJWyqIEZJsmB4onalZ8G",
+      "location": "Mumbai",
+      "type": "farmer",
+      "photo": null
+    },
+    {
+      "id": "mnouyn9lrehrsx",
+      "name": "harsh udhani",
+      "phone": "9322414580",
+      "email": "harshu96190@gmail.com",
+      "password": "$2b$10$fTen2rxYgevu8VwJzcFhgOcSpb0GfQM/Mg2nYNnGl9tmJFj5bhkxm",
+      "location": "satara",
+      "type": "farmer",
+      "photo": null
+    },
+    {
+      "id": "mnov0zvqbatkyi",
+      "name": "shreyash_33",
+      "phone": "+919325420825",
+      "email": "shreyaskatole33@gmail.com",
+      "password": "$2b$10$XXsxPNLakN30gx9PM.9mYuy7tl/jxRtXff0EPkB0343WIhTBpj6vy",
+      "location": "Yavatmal",
+      "type": "transporter",
+      "photo": null
     }
   ],
   "crops": [
@@ -200,6 +240,47 @@
   "inputs": [],
   "logistics": [
     {
+      "id": "mnov2fpmt7fqjj",
+      "trackingId": "TRK1775580973832",
+      "farmerId": "mnouyn9lrehrsx",
+      "farmerName": "harsh udhani",
+      "farmerPhone": "9325420825",
+      "buyerEmail": "shreyaskatole33@gmail.com",
+      "cropType": "mango",
+      "quantity": 250,
+      "fromLocation": "satara",
+      "toLocation": "yavatmal",
+      "requestedDate": "2026-04-20",
+      "status": "in-transit",
+      "transporterId": "mnov0zvqbatkyi",
+      "transporterName": "shreyash_33",
+      "progress": 0,
+      "aiRoute": "Route optimization unavailable",
+      "estimatedDelivery": null,
+      "review": null,
+      "statusHistory": [
+        {
+          "status": "pending",
+          "actor": "harsh udhani",
+          "note": "Shipment created",
+          "timestamp": "2026-04-07T16:56:13.834Z"
+        },
+        {
+          "status": "accepted",
+          "actor": "shreyash_33",
+          "note": "Transporter accepted the job",
+          "timestamp": "2026-04-07T16:56:31.741Z"
+        },
+        {
+          "status": "in-transit",
+          "actor": "shreyash_33",
+          "note": "Delivery started",
+          "timestamp": "2026-04-07T16:56:43.967Z"
+        }
+      ],
+      "createdAt": "2026-04-07T16:56:13.834Z"
+    },
+    {
       "id": "mgihomtsk0cv7n",
       "farmerId": "mgihinbyk4jgaf",
       "farmerName": "LogUser",
@@ -207,8 +288,18 @@
       "quantity": 50,
       "fromLocation": "Farm",
       "toLocation": "Market",
-      "status": "pending",
-      "requestedDate": "2025-10-08T21:17:01.456Z"
+      "status": "accepted",
+      "requestedDate": "2025-10-08T21:17:01.456Z",
+      "transporterId": "mnov0zvqbatkyi",
+      "transporterName": "shreyash_33",
+      "statusHistory": [
+        {
+          "status": "accepted",
+          "actor": "shreyash_33",
+          "note": "Transporter accepted the job",
+          "timestamp": "2026-04-07T16:56:33.979Z"
+        }
+      ]
     },
     {
       "id": "mgihjvetq2szbt",

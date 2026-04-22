@@ -2,33 +2,32 @@ const tf = require('@tensorflow/tfjs');
 const { Jimp } = require('jimp');
 
 /**
- * Preprocess image buffer using Jimp and pure TFJS
- * Avoids dependency on tfjs-node's native decodeImage
+ * Preprocess image buffer using Jimp (pure-JS fallback, no tfjs-node needed).
+ *
+ * Produces a [1, 224, 224, 3] float32 tensor with values in [0, 1],
+ * matching EfficientNet training preprocessing.
  */
 async function preprocessImage(buffer) {
-  // Read image using Jimp
+  // Decode the image via Jimp and resize to model input size
   const image = await Jimp.read(buffer);
+  image.resize({ w: 224, h: 224 });
 
-  // Resize to 224x224 (as required by the model)
-  image.resize(224, 224);
+  const { data, width, height } = image.bitmap; // Uint8Array: RGBA interleaved
 
-  // Get image data as a buffer
-  const { data, width, height } = image.bitmap; // RGBA buffer
+  // Manually strip the alpha channel: [R,G,B,A,...] → [R,G,B,...]
+  // This avoids any tensor slicing overhead and gives us exactly what
+  // tf.node.decodeImage(buffer, 3) would produce.
+  const rgbData = new Float32Array(width * height * 3);
+  for (let i = 0, j = 0; i < data.length; i += 4, j += 3) {
+    rgbData[j] = data[i] / 255.0; // R
+    rgbData[j + 1] = data[i + 1] / 255.0; // G
+    rgbData[j + 2] = data[i + 2] / 255.0; // B
+    // Alpha channel (data[i+3]) is intentionally discarded
+  }
 
-  return tf.tidy(() => {
-    // Convert RGBA to RGB tensor
-    // Jimp gives us a Uint8Array [R, G, B, A, R, G, B, A, ...]
-    const imgTensor = tf.tensor3d(new Uint8Array(data), [height, width, 4]);
-
-    // Slice to get only RGB
-    const rgbTensor = imgTensor.slice([0, 0, 0], [-1, -1, 3]);
-
-    // Expand dims to match batch shape [1, 224, 224, 3]
-    const expanded = rgbTensor.expandDims(0);
-
-    // Normalize to [0, 1]
-    return expanded.cast('float32').div(255.0);
-  });
+  // Build the tensor directly from the pre-normalised Float32Array
+  // Shape [1, 224, 224, 3] — batch dimension added inline
+  return tf.tensor4d(rgbData, [1, height, width, 3]);
 }
 
 module.exports = { preprocessImage };

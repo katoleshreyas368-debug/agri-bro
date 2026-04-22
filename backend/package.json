@@ -32,8 +32,13 @@
     "mongoose": "^7.6.3",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^8.0.4",
     "ollama": "^0.6.2",
-    "pdf-parse": "^2.4.5"
+    "openai": "^6.33.0",
+    "pdf-parse": "^2.4.5",
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.3",
+    "twilio": "^5.13.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

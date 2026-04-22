@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { isMongoEnabled, ensureMongo } = require('../db');
+const { isMongoEnabled, initDB } = require('../db');
 
 router.get('/', async (req, res) => {
   try {
     const mongo = await isMongoEnabled();
-    const info = { mongo: !!mongo };
+    const info = { mongo: !!mongo, websocket: true };
     if (mongo) {
-      const db = await ensureMongo();
-      const admin = db.admin ? db.admin() : null;
+      const db = await initDB();
       info.dbName = db.databaseName;
       try {
         // quick ping

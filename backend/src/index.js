@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');              // NEW — Node's built-in http module
+const { Server } = require('socket.io');   // NEW — Socket.io
 const cors = require('cors');
 const path = require('path');
 const { initDB } = require('./db');
@@ -14,9 +16,47 @@ const healthRoutes = require('./routes/health');
 const uploadRoutes = require('./routes/upload');
 const chatRoutes = require('./routes/chat');
 const predictRoutes = require('./routes/predict');
+const paymentRoutes = require('./routes/payment');
+const shipmentPaymentRoutes = require('./routes/shipmentPayment');
+const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// NEW: wrap express inside a plain http server so Socket.io can attach
+const server = http.createServer(app);
+
+// NEW: attach Socket.io to the http server
+const io = new Server(server, {
+  cors: {
+    origin: true,                          // match existing CORS policy
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
+    credentials: true
+  }
+});
+
+// NEW: make `io` available to all route files via req.app.get('io')
+app.set('io', io);
+
+// NEW: Socket.io connection handler
+io.on('connection', (socket) => {
+  console.log('🔌 WebSocket connected:', socket.id);
+
+  // When a client wants to watch a specific shipment
+  socket.on('watch_shipment', (shipmentId) => {
+    socket.join(shipmentId);
+    console.log(`  └─ Socket ${socket.id} is watching shipment ${shipmentId}`);
+  });
+
+  // When a client stops watching a shipment
+  socket.on('unwatch_shipment', (shipmentId) => {
+    socket.leave(shipmentId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 WebSocket disconnected:', socket.id);
+  });
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -43,6 +83,10 @@ app.use('/health', healthRoutes);
 app.use('/upload', uploadRoutes);
 app.use('/chat', chatRoutes);
 app.use('/api/predict', predictRoutes); // as requested
+app.use('/payment', paymentRoutes);
+app.use('/api/orders', paymentRoutes);  // Alias: POST /api/orders/create-order-with-fees
+app.use('/shipment-payment', shipmentPaymentRoutes);
+app.use('/notifications', notificationsRoutes);
 app.use('/uploads', express.static('public/uploads'));
 
 app.get('/', (req, res) => {
@@ -54,15 +98,15 @@ module.exports = app;
 
 // Only start server when this file is run directly
 if (require.main === module) {
-  // Start server first to ensure we're listening for requests
-  const server = app.listen(PORT, '0.0.0.0', () => {
+  // Start server — use the http server (not app.listen) so Socket.io works
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log('🔌 WebSocket server ready on same port');
     console.log('Press Ctrl+C to stop');
   });
 
   server.on('error', (err) => {
     console.error('Server error:', err && err.message ? err.message : err);
-    // Exit on critical errors
     if (err.code === 'EADDRINUSE') {
       console.error(`Port ${PORT} is already in use. Please choose a different port.`);
       process.exit(1);

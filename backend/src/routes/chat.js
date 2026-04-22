@@ -362,7 +362,6 @@ router.post("/", requireAuth, upload.single('image'), async (req, res) => {
 
         // Output from gemini or fallback
         let replyText = "";
-        let isLowConfidence = false;
 
         if (req.file) {
             try {
@@ -371,13 +370,25 @@ router.post("/", requireAuth, upload.single('image'), async (req, res) => {
                 dbDiseaseDetected = mlResult.disease;
                 dbConfidence = mlResult.confidence;
 
-                if (mlResult.probValue < 0.50) {
-                    isLowConfidence = true;
-                    replyText = "The image wasn't clear enough. Please try a closer, well-lit photo of the affected leaf.";
+                // Always proceed with whatever the model detected — never block.
+                // Low confidence gets a note in the message, but RAG + Gemini still run.
+                const isHealthy = mlResult.disease.toLowerCase().includes('healthy');
+                const isLowConf = mlResult.probValue < 0.30;
+
+                let effectiveMessage;
+                if (isHealthy) {
+                    effectiveMessage = `I uploaded a ${mlResult.crop.toLowerCase()} leaf image. The ML model detected the plant looks healthy (${mlResult.predictionString}, confidence: ${mlResult.confidence}).${isLowConf ? ' Note: confidence is low — the image may benefit from a closer shot, but please share what you know.' : ' Please confirm and give me tips to maintain healthy crops.'}`;
                 } else {
-                    predictionContext = `[Active Disease Diagnosis]: ${mlResult.predictionString} detected with ${mlResult.confidence} confidence.`;
-                    queryMessage = `${message || ''} ${mlResult.predictionString}`.trim();
+                    effectiveMessage = `I uploaded a ${mlResult.crop.toLowerCase()} leaf image. The ML model detected: ${mlResult.predictionString} (confidence: ${mlResult.confidence}).${isLowConf ? ' Note: confidence is low, but please still provide information about this disease — its causes, symptoms, treatment and prevention — so the farmer is informed.' : ' Please tell me about this disease — causes, symptoms, treatment, and prevention.'}`;
                 }
+
+                // Append any extra text the farmer typed alongside the image
+                if (message && message !== "Please analyze this image.") {
+                    effectiveMessage += ` Additional context from farmer: ${message}`;
+                }
+
+                predictionContext = `[Active Disease Diagnosis]: ${mlResult.predictionString} detected with ${mlResult.confidence} confidence.${isLowConf ? ' (Low confidence — treat as a preliminary indicator.)' : ''}`;
+                queryMessage = effectiveMessage; // forward to both RAG and Gemini
 
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
                 const ext = path.extname(req.file.originalname) || '.jpg';
@@ -421,7 +432,7 @@ router.post("/", requireAuth, upload.single('image'), async (req, res) => {
             parts: [{ text: m.text }]
         }));
 
-        if (!isLowConfidence) {
+        {
             // Retrieve LanceDB Rag Chunk Context
             const ragContext = await retrieveContext(queryMessage);
             const systemPrompt = getSystemPrompt(ragContext, language, predictionContext);
@@ -440,7 +451,9 @@ router.post("/", requireAuth, upload.single('image'), async (req, res) => {
             const previousContextHistory = history.slice(0, history.length - 1);
             const aiChat = model.startChat({ history: previousContextHistory });
 
-            const result = await sendMessageWithRetry(aiChat, message || "Please process the image");
+            // Use queryMessage: for image uploads this is the disease-enriched effectiveMessage;
+            // for text-only messages it equals the original user message
+            const result = await sendMessageWithRetry(aiChat, queryMessage || message || "Please process the image");
             replyText = result.response.text();
         }
 
