@@ -13,7 +13,7 @@ Multer (memory buffer)
     ↓
 preprocess.js → [1, 224, 224, 3] tensor
     ↓
-TF.js model → crop head + disease head
+TF.js model → crop head + disease headse
     ↓
 diseaseMap.js → filter by crop → best disease
     ↓

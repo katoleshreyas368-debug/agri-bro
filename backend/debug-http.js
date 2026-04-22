@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-(async ()=>{
+(async () => {
   try {
     console.log('GET /');
     const root = await axios.get('http://localhost:4000/');
@@ -9,13 +9,13 @@ const axios = require('axios');
 
   try {
     console.log('\nGET /health');
-    const health = await axios.get('http://localhost:4000/health');
+    const health = await axios.get('https://agri-bro.onrender.com/health');
     console.log(health.data);
   } catch (e) { console.error('GET /health failed', e && e.code, e && (e.response ? JSON.stringify(e.response.data) : e.message)); }
 
   try {
     console.log('\nPOST /auth/login');
-    const login = await axios.post('http://localhost:4000/auth/login', { name: 'DebugUser', phone: '9000000010' });
+    const login = await axios.post('https://agri-bro.onrender.com/auth/login', { name: 'DebugUser', phone: '9000000010' });
     console.log(login.data);
   } catch (e) { console.error('POST /auth/login failed', e && e.code, e && (e.response ? JSON.stringify(e.response.data) : e.message), e && e.stack ? e.stack.split('\n')[0] : ''); }
 
