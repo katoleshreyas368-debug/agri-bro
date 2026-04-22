@@ -39,6 +39,7 @@ const RetailerLogistics: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showPayment, setShowPayment] = useState(false);
+    const [showMap, setShowMap] = useState(false);
 
     const [activePicker, setActivePicker] = useState<'none' | 'fromLocation' | 'toLocation'>('none');
 
@@ -154,9 +155,9 @@ const RetailerLogistics: React.FC = () => {
     });
 
     return (
-        <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex overflow-hidden">
+        <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex flex-col lg:flex-row overflow-hidden">
             {/* ── Left Sidebar ── */}
-            <aside className="w-96 bg-white border-r border-gray-200 flex flex-col z-[1500] shadow-xl">
+            <aside className={`w-full lg:w-96 bg-white border-r border-gray-200 flex flex-col z-[1500] shadow-xl ${showMap ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="p-6 border-b border-gray-100 bg-white/50 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -289,11 +290,25 @@ const RetailerLogistics: React.FC = () => {
                             <p className="text-lg font-bold mt-0.5 text-blue-500">97.2%</p>
                         </div>
                     </div>
+                    {/* Mobile Map Toggle */}
+                    <button
+                        onClick={() => setShowMap(true)}
+                        className="lg:hidden w-full mt-3 bg-brand-green text-white font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-green-dark transition-all"
+                    >
+                        <Navigation size={16} /> View Map
+                    </button>
                 </div>
             </aside>
 
             {/* ── Main Panel ── */}
-            <main className="flex-1 relative bg-white z-0">
+            <main className={`flex-1 relative bg-white z-0 ${showMap ? 'flex' : 'hidden lg:block'}`}>
+                {/* Mobile Back Button */}
+                <button
+                    onClick={() => setShowMap(false)}
+                    className="lg:hidden absolute top-4 left-4 z-[1200] bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold text-gray-700 shadow-lg flex items-center gap-2"
+                >
+                    ← Orders
+                </button>
                 <div className="h-full w-full">
                     {selectedRequest ? (
                         <Suspense fallback={

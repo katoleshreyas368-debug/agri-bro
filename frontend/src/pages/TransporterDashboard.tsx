@@ -28,6 +28,7 @@ const TransporterDashboard: React.FC = () => {
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [selectedJob, setSelectedJob] = useState<LogisticsRequest | null>(null);
     const [activeTab, setActiveTab] = useState<'mine' | 'available'>('mine');
+    const [showMap, setShowMap] = useState(false);
 
     const fetchRequests = useCallback(async () => {
         if (!user || !token) return;
@@ -123,9 +124,9 @@ const TransporterDashboard: React.FC = () => {
     const totalInTransit = requests.filter(r => r.status === 'in-transit').length;
 
     return (
-        <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex overflow-hidden">
+        <div className="h-[calc(100vh-80px)] bg-brand-surface text-gray-900 flex flex-col lg:flex-row overflow-hidden">
             {/* ── Side Console: Jobs & Log ── */}
-            <aside className="w-96 bg-white border-r border-gray-200 flex flex-col z-[1500] shadow-xl">
+            <aside className={`w-full lg:w-96 bg-white border-r border-gray-200 flex flex-col z-[1500] shadow-xl ${showMap ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="p-6 border-b border-gray-100 bg-white/50 backdrop-blur-md">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -274,11 +275,25 @@ const TransporterDashboard: React.FC = () => {
                     <div className="h-1 bg-gray-200 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-green w-4/5"></div>
                     </div>
+                    {/* Mobile Map Toggle */}
+                    <button
+                        onClick={() => setShowMap(true)}
+                        className="lg:hidden w-full mt-3 bg-brand-green text-white font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-green-dark transition-all"
+                    >
+                        <Navigation size={16} /> View Map
+                    </button>
                 </div>
             </aside>
 
             {/* ── Center: Integrated Tactical Map ── */}
-            <main className="flex-1 relative bg-white z-0">
+            <main className={`flex-1 relative bg-white z-0 ${showMap ? 'flex' : 'hidden lg:block'}`}>
+                {/* Mobile Back Button */}
+                <button
+                    onClick={() => setShowMap(false)}
+                    className="lg:hidden absolute top-4 left-4 z-[1200] bg-white/90 backdrop-blur-xl border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold text-gray-700 shadow-lg flex items-center gap-2"
+                >
+                    ← Jobs
+                </button>
                 <div className="h-full w-full">
                     {selectedJob ? (
                         <Suspense fallback={<div className="h-full w-full flex items-center justify-center bg-brand-surface"><Activity className="animate-pulse text-brand-green" /></div>}>

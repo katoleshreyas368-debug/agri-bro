@@ -421,28 +421,28 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* ── Quick Actions / Floating Command ── */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000]">
-          <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center gap-8 shadow-2xl">
-            <div className="flex items-center gap-6">
-              <button onClick={() => navigate('/marketplace')} className="flex flex-col items-center gap-1 group">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000] w-auto max-w-[calc(100vw-32px)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="bg-gray-950/90 backdrop-blur-xl border border-white/10 rounded-full px-4 sm:px-8 py-3 sm:py-4 flex items-center gap-4 sm:gap-8 shadow-2xl">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <button onClick={() => navigate('/marketplace')} className="flex flex-col items-center gap-1 group min-w-[44px] min-h-[44px] justify-center">
                 <Package size={18} className="text-gray-400 group-hover:text-brand-green transition-colors" />
                 <span className="text-[8px] font-black uppercase text-gray-500 group-hover:text-white transition-colors">
                   {user.type === 'farmer' ? 'List Crop' : 'Browse'}
                 </span>
               </button>
               <div className="w-px h-6 bg-white/10" />
-              <button onClick={() => navigate('/inputs')} className="flex flex-col items-center gap-1 group">
+              <button onClick={() => navigate('/inputs')} className="flex flex-col items-center gap-1 group min-w-[44px] min-h-[44px] justify-center">
                 <ShoppingCart size={18} className="text-gray-400 group-hover:text-brand-green transition-colors" />
                 <span className="text-[8px] font-black uppercase text-gray-500 group-hover:text-white transition-colors">Buy Inputs</span>
               </button>
               <div className="w-px h-6 bg-white/10" />
-              <button onClick={() => navigate(logisticsPath)} className="flex flex-col items-center gap-1 group">
+              <button onClick={() => navigate(logisticsPath)} className="flex flex-col items-center gap-1 group min-w-[44px] min-h-[44px] justify-center">
                 <Truck size={18} className="text-gray-400 group-hover:text-brand-green transition-colors" />
                 <span className="text-[8px] font-black uppercase text-gray-500 group-hover:text-white transition-colors">Logistics</span>
               </button>
             </div>
             <div className="w-px h-8 bg-white/20" />
-            <button onClick={() => navigate('/advisor')} className="flex flex-col items-center gap-1 group">
+            <button onClick={() => navigate('/advisor')} className="flex flex-col items-center gap-1 group min-w-[44px] min-h-[44px] justify-center">
               <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center text-white shadow-lg shadow-brand-green/40 group-hover:scale-110 transition-all">
                 <LayoutGrid size={20} />
               </div>

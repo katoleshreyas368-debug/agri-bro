@@ -75,6 +75,7 @@ const blogs = [
 // ─── COMPONENT ────────────────────────────────────────────
 const Landing: React.FC = () => {
   const [heroIdx, setHeroIdx] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -112,7 +113,7 @@ const Landing: React.FC = () => {
             <span className="landing-header__logo-icon">🌿</span>
             AgriBro
           </Link>
-          <nav className="landing-header__nav">
+          <nav className="landing-header__nav landing-header__nav--desktop">
             <Link to="/" className="landing-header__link">Home</Link>
             <Link to="/marketplace" className="landing-header__link">Marketplace</Link>
             <Link to="/advisor" className="landing-header__link">AI Advisor</Link>
@@ -120,7 +121,26 @@ const Landing: React.FC = () => {
             <Link to="/community" className="landing-header__link">Community</Link>
             <Link to="/login" className="landing-header__cta">Get Started</Link>
           </nav>
+          <button
+            className="landing-header__hamburger"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle navigation"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
         </header>
+
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="landing-mobile-menu">
+            <Link to="/" className="landing-mobile-menu__link" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+            <Link to="/marketplace" className="landing-mobile-menu__link" onClick={() => setMobileMenuOpen(false)}>Marketplace</Link>
+            <Link to="/advisor" className="landing-mobile-menu__link" onClick={() => setMobileMenuOpen(false)}>AI Advisor</Link>
+            <Link to="/logistics" className="landing-mobile-menu__link" onClick={() => setMobileMenuOpen(false)}>Logistics</Link>
+            <Link to="/community" className="landing-mobile-menu__link" onClick={() => setMobileMenuOpen(false)}>Community</Link>
+            <Link to="/login" className="landing-mobile-menu__cta" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+          </div>
+        )}
 
         <div className="hero__content">
           <p className="hero__subtitle">Welcome to AgriBro</p>
