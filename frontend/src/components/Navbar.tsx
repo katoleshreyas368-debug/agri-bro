@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import NotificationsPanel from './NotificationsPanel';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const { user, logout, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -54,9 +56,15 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
-              <div className="flex items-center gap-4">
+              <>
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all relative"
+                >
+                  <Bell className="h-5 w-5" />
+                </button>
                 <Link
                   to="/dashboard"
                   className="flex items-center gap-2 px-5 py-2.5 rounded-full text-[12px] font-black uppercase tracking-widest bg-gray-50 text-gray-700 hover:bg-brand-green-light hover:text-brand-green transition-all"
@@ -71,7 +79,7 @@ const Navbar: React.FC = () => {
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Logout</span>
                 </button>
-              </div>
+              </>
             ) : (
               <Link
                 to="/login"
@@ -144,6 +152,9 @@ const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Notifications Panel */}
+      <NotificationsPanel isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
     </nav>
   );
 };

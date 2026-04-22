@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, ShoppingCart, Package, Shield, Minus, Plus } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { X, ShoppingCart, Package, Shield, Minus, Plus, Receipt, Info } from 'lucide-react';
+import { calculateFees, formatINR, formatPct } from '../utils/feeCalculator';
 
 interface AddToCartModalProps {
     item: {
@@ -9,6 +10,7 @@ interface AddToCartModalProps {
         unit: string;
         imageUrl: string;
         vendorName: string;
+        category?: string;       // e.g. 'seeds', 'fertilizers', 'pesticides', 'equipment'
     };
     onClose: () => void;
     onConfirm: (quantity: number) => void;
@@ -23,7 +25,18 @@ const AddToCartModal: React.FC<AddToCartModalProps> = ({ item, onClose, onConfir
         onClose();
     };
 
-    const totalAmount = item.price * quantity;
+    const baseAmount = item.price * quantity;
+
+    // ── Map item.category to fee calculator category ──
+    // InputStore categories: 'seeds', 'fertilizers', 'pesticides'
+    // Fallback to 'seeds' for unlabelled agricultural products (0% GST)
+    const feeCategory = item.category || 'seeds';
+
+    // ── Calculate fees in real-time as quantity changes ──
+    const breakdown = useMemo(() => {
+        if (baseAmount <= 0) return null;
+        return calculateFees(baseAmount, feeCategory);
+    }, [baseAmount, feeCategory]);
 
     return (
         <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
@@ -109,24 +122,70 @@ const AddToCartModal: React.FC<AddToCartModalProps> = ({ item, onClose, onConfir
                             </div>
                         </div>
 
-                        {/* Price Summary */}
-                        <div className="bg-brand-green/5 rounded-[24px] p-6 border border-brand-green/10 space-y-3">
-                            <div className="flex justify-between items-center text-sm font-medium">
-                                <span className="text-gray-500">Subtotal ({quantity} {item.unit})</span>
-                                <span className="text-gray-900 font-bold">₹{item.price * quantity}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm font-medium">
-                                <span className="text-gray-500">Service Fee</span>
-                                <span className="text-brand-green font-bold">₹0.00</span>
-                            </div>
-                            <div className="h-px bg-brand-green/10 my-2" />
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Cart Value</span>
-                                <div className="text-right">
-                                    <p className="text-2xl font-black text-gray-900">₹{totalAmount}</p>
+                        {/* ── Fee Breakdown Section ── */}
+                        {breakdown && (
+                            <div className="bg-brand-green/5 rounded-[24px] p-6 border border-brand-green/10 space-y-3">
+                                {/* Header */}
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Receipt size={14} className="text-brand-green" />
+                                    <span className="text-[10px] font-bold text-brand-green uppercase tracking-widest">Fee Breakdown</span>
                                 </div>
+
+                                {/* Base subtotal */}
+                                <div className="flex justify-between items-center text-sm font-medium">
+                                    <span className="text-gray-500">Subtotal ({quantity} {item.unit})</span>
+                                    <span className="text-gray-900 font-bold">{formatINR(breakdown.baseAmount)}</span>
+                                </div>
+
+                                {/* Product GST */}
+                                <div className="flex justify-between items-center text-sm font-medium">
+                                    <span className="text-gray-500">
+                                        GST ({formatPct(breakdown.productGSTRate)})
+                                    </span>
+                                    {breakdown.productGST === 0 ? (
+                                        <span className="text-brand-green font-bold text-xs bg-brand-green/10 px-2 py-0.5 rounded-full">
+                                            Exempt ✓
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-900 font-bold">{formatINR(breakdown.productGST)}</span>
+                                    )}
+                                </div>
+
+                                {/* Convenience Fee */}
+                                <div className="flex justify-between items-center text-sm font-medium">
+                                    <span className="text-gray-500">
+                                        Platform Fee ({formatPct(breakdown.convenienceFeeRate)})
+                                    </span>
+                                    <span className="text-gray-900 font-bold">{formatINR(breakdown.convenienceFee)}</span>
+                                </div>
+
+                                {/* GST on Convenience Fee */}
+                                <div className="flex justify-between items-center text-sm font-medium">
+                                    <span className="text-gray-400 text-xs">GST on Platform Fee (18%)</span>
+                                    <span className="text-gray-500 font-medium text-xs">{formatINR(breakdown.convenienceFeeGST)}</span>
+                                </div>
+
+                                <div className="h-px bg-brand-green/10 my-2" />
+
+                                {/* Total Payable */}
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Cart Value</span>
+                                    <div className="text-right">
+                                        <p className="text-2xl font-black text-gray-900">{formatINR(breakdown.totalPayable)}</p>
+                                    </div>
+                                </div>
+
+                                {/* Info note */}
+                                {breakdown.productGST === 0 && (
+                                    <div className="flex items-start gap-2 mt-2 pt-2 border-t border-brand-green/10">
+                                        <Info size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                                        <p className="text-[11px] text-gray-400 leading-relaxed">
+                                            Agricultural products are GST-exempt under Indian tax law
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Action Button */}

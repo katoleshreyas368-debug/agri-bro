@@ -4,6 +4,8 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import AddInputModal from '../components/AddInputModal';
 import AddToCartModal from '../components/AddToCartModal';
+import PaymentButton from '../components/PaymentButton';
+import { calculateFees, formatINR, formatPct } from '../utils/feeCalculator';
 
 /* ============================================================
    InputStore Page — Modern E-Commerce Layout
@@ -458,32 +460,91 @@ const InputStore: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Floating Cart Summary ── */}
-      {cart.length > 0 && (
-        <div
-          className="fixed bottom-6 right-6 bg-white rounded-2xl border border-gray-200 p-5 z-[500] w-72 transition-all duration-300"
-          style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}
-        >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-brand-green-light">
-              <ShoppingCart className="h-5 w-5 text-brand-green" />
+      {/* ── Floating Cart Summary with Fee Breakdown ── */}
+      {cart.length > 0 && (() => {
+        const cartTotal = getCartTotal();
+        // Determine dominant category from cart items for fee calculation
+        // Default to 'seeds' for Input Store items (0% GST, agricultural essentials)
+        const dominantCategory = (() => {
+          const categories = cart.map(c => {
+            const item = inputItems.find(i => i.id === c.id);
+            return item?.category || 'seeds';
+          });
+          // Most common category in cart
+          const freq: Record<string, number> = {};
+          categories.forEach(cat => { freq[cat] = (freq[cat] || 0) + 1; });
+          return Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0] || 'seeds';
+        })();
+        const cartBreakdown = cartTotal > 0 ? calculateFees(cartTotal, dominantCategory) : null;
+        const payAmount = cartBreakdown?.totalPayable || cartTotal;
+
+        return (
+          <div
+            className="fixed bottom-6 right-6 bg-white rounded-2xl border border-gray-200 p-5 z-[500] w-80 transition-all duration-300"
+            style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.12)' }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 rounded-lg bg-brand-green-light">
+                <ShoppingCart className="h-5 w-5 text-brand-green" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm">Cart Summary</h3>
+                <p className="text-xs text-gray-500">{getCartCount()} items</p>
+              </div>
+              <button
+                onClick={() => setCart([])}
+                className="ml-auto text-gray-400 hover:text-red-500 transition-colors"
+                title="Clear cart"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <div>
-              <h3 className="font-bold text-gray-900 text-sm">Cart Summary</h3>
-              <p className="text-xs text-gray-500">{getCartCount()} items</p>
-            </div>
+
+            {/* Fee Breakdown */}
+            {cartBreakdown && (
+              <div className="border-t border-gray-100 pt-3 mb-3 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">Subtotal</span>
+                  <span className="font-semibold text-gray-700">{formatINR(cartBreakdown.baseAmount)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">GST ({formatPct(cartBreakdown.productGSTRate)})</span>
+                  {cartBreakdown.productGST === 0 ? (
+                    <span className="font-semibold text-brand-green text-[10px] bg-brand-green/10 px-1.5 py-0.5 rounded">Exempt</span>
+                  ) : (
+                    <span className="font-semibold text-gray-700">{formatINR(cartBreakdown.productGST)}</span>
+                  )}
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">Platform Fee</span>
+                  <span className="font-semibold text-gray-700">{formatINR(cartBreakdown.convenienceFee + cartBreakdown.convenienceFeeGST)}</span>
+                </div>
+                <div className="h-px bg-gray-100 my-1" />
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-gray-700">Total</span>
+                  <span className="text-lg font-bold text-brand-green">{formatINR(cartBreakdown.totalPayable)}</span>
+                </div>
+              </div>
+            )}
+
+            <PaymentButton
+              amount={payAmount}
+              description={`AgriBro Store — ${getCartCount()} items`}
+              notes={{ items: cart.map(c => c.id).join(','), source: 'input_store', feeCategory: dominantCategory }}
+              fullWidth
+              buttonText={`Pay ${formatINR(payAmount)}`}
+              onSuccess={(result) => {
+                console.log('✅ Payment successful:', result);
+                setCart([]);
+                alert(`Payment successful!\nPayment ID: ${result.paymentId}\nTotal Paid: ${formatINR(payAmount)}`);
+              }}
+              onFailure={(error) => {
+                console.error('❌ Payment failed:', error);
+              }}
+            />
           </div>
-          <div className="border-t border-gray-100 pt-3 mb-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Total</span>
-              <span className="text-xl font-bold text-brand-green">₹{getCartTotal()}</span>
-            </div>
-          </div>
-          <button className="w-full bg-brand-green text-white py-2.5 rounded-xl font-semibold hover:bg-brand-green-dark transition-colors text-sm">
-            Checkout
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Add Input Modal ── */}
       {showAddInput && <AddInputModal onClose={() => setShowAddInput(false)} />}

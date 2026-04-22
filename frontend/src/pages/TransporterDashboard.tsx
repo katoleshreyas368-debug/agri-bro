@@ -1,33 +1,39 @@
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
-import { Truck, MapPin, Activity, Navigation, Settings, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
+import { Truck, MapPin, Activity, Navigation, Settings, ShieldCheck, Clock, Wifi, WifiOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useShipmentTracking } from '../hooks/useShipmentTracking';
 
 const DeliveryRouteMap = React.lazy(() => import('../components/DeliveryRouteMap'));
 
 interface LogisticsRequest {
     id: string;
+    trackingId?: string;
     cropType: string;
     quantity: number;
     fromLocation: string;
     toLocation: string;
     requestedDate: string;
-    status: 'pending' | 'accepted' | 'in-transit' | 'completed';
+    status: 'pending' | 'accepted' | 'in-transit' | 'completed' | 'cancelled';
     progress?: number;
     transporterId?: string;
     farmerName?: string;
+    farmerPhone?: string;
+    buyerEmail?: string;
+    aiRoute?: string;
+    estimatedDelivery?: string;
 }
 
 const TransporterDashboard: React.FC = () => {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [selectedJob, setSelectedJob] = useState<LogisticsRequest | null>(null);
     const [activeTab, setActiveTab] = useState<'mine' | 'available'>('mine');
 
     const fetchRequests = useCallback(async () => {
-        if (!user) return;
+        if (!user || !token) return;
         try {
-            const res = await fetch('http://localhost:3000/logistics', {
-                headers: { Authorization: `Bearer ${user?.id}` },
+            const res = await fetch('http://localhost:3000/logistics/my', {
+                headers: { Authorization: `Bearer ${token}` },
                 cache: 'no-store'
             });
             const data = await res.json();
@@ -35,13 +41,32 @@ const TransporterDashboard: React.FC = () => {
         } catch (error) {
             console.error("Failed to fetch requests", error);
         }
-    }, [user]);
+    }, [user, token]);
 
     useEffect(() => {
         fetchRequests();
-        const interval = setInterval(fetchRequests, 3000);
-        return () => clearInterval(interval);
     }, [fetchRequests]);
+
+    // ─── NEW: WebSocket live tracking (replaces old setInterval polling) ───
+    const shipmentIds = useMemo(() => requests.map(r => r.id), [requests]);
+    const { liveUpdates, connected: wsConnected } = useShipmentTracking(shipmentIds);
+
+    // Merge live WebSocket updates into the requests state
+    useEffect(() => {
+        if (liveUpdates.size === 0) return;
+        setRequests(prev => {
+            let changed = false;
+            const next = prev.map(req => {
+                const update = liveUpdates.get(req.id);
+                if (update) {
+                    changed = true;
+                    return { ...req, ...update } as LogisticsRequest;
+                }
+                return req;
+            });
+            return changed ? next : prev;
+        });
+    }, [liveUpdates]);
 
     useEffect(() => {
         const activeJobs = requests.filter(r => ['accepted', 'in-transit'].includes(r.status));
@@ -61,7 +86,7 @@ const TransporterDashboard: React.FC = () => {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${user?.id}`
+                    Authorization: `Bearer ${token}`
                 }
             });
             if (res.ok) {
@@ -82,7 +107,7 @@ const TransporterDashboard: React.FC = () => {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${user?.id}`
+                    Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({ progress })
             });
@@ -286,8 +311,11 @@ const TransporterDashboard: React.FC = () => {
                             <div>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Signal Status</p>
                                 <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                                    <span className="text-[10px] font-bold uppercase text-gray-700">UHF LINK ACTIVE</span>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${wsConnected ? 'bg-blue-500 animate-pulse' : 'bg-red-400'}`}></div>
+                                    <span className="text-[10px] font-bold uppercase text-gray-700">
+                                        {wsConnected ? 'LIVE LINK ACTIVE' : 'CONNECTING...'}
+                                    </span>
+                                    {wsConnected ? <Wifi size={10} className="text-blue-500" /> : <WifiOff size={10} className="text-red-400" />}
                                 </div>
                             </div>
                         </div>
@@ -331,7 +359,7 @@ const TransporterDashboard: React.FC = () => {
                                 <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
                                 <div className="text-center">
                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">ETA Status</p>
-                                    <p className="text-xl font-black text-brand-green uppercase">On Time</p>
+                                    <p className="text-xl font-black text-brand-green uppercase">{selectedJob.estimatedDelivery || 'On Time'}</p>
                                 </div>
                                 <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
 
@@ -354,6 +382,23 @@ const TransporterDashboard: React.FC = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* AI Route & ETA bar */}
+                            {(selectedJob.aiRoute || selectedJob.estimatedDelivery) && (
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 text-[11px]">
+                                    {selectedJob.aiRoute && selectedJob.aiRoute !== 'Route optimization unavailable' && (
+                                        <div className="flex items-center gap-2 text-gray-500 flex-1">
+                                            <Navigation size={12} className="text-brand-green shrink-0" />
+                                            <span className="truncate"><strong className="text-gray-700">AI Route:</strong> {selectedJob.aiRoute}</span>
+                                        </div>
+                                    )}
+                                    {selectedJob.estimatedDelivery && (
+                                        <div className="flex items-center gap-1.5 text-blue-500 font-bold shrink-0">
+                                            <Clock size={12} /> ETA: {selectedJob.estimatedDelivery}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

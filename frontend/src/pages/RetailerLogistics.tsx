@@ -1,39 +1,55 @@
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
-import { MapPin, Calendar, CheckCircle, X, Search, Plus, Activity, Wind, Navigation, Package, ShoppingBag, User } from 'lucide-react';
+import React, { useState, useEffect, Suspense, useCallback, useMemo } from 'react';
+import { MapPin, Calendar, CheckCircle, X, Search, Plus, Activity, Wind, Navigation, Package, ShoppingBag, User, Phone, Mail, Clock, Wifi, WifiOff, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import InlineLocationPicker from '../components/InlineLocationPicker';
 import LocationPreviewMap from '../components/LocationPreviewMap';
+import { useShipmentTracking } from '../hooks/useShipmentTracking';
+import ShipmentCheckoutModal from '../components/ShipmentCheckoutModal';
 
 const DeliveryRouteMap = React.lazy(() => import('../components/DeliveryRouteMap'));
 
 interface LogisticsRequest {
     id: string;
-    cropType: string; // Used for "Product/Order Name"
+    trackingId?: string;
+    cropType: string;
     quantity: number;
     fromLocation: string;
     toLocation: string;
     requestedDate: string;
-    status: 'pending' | 'accepted' | 'in-transit' | 'completed';
+    status: 'pending' | 'accepted' | 'in-transit' | 'completed' | 'cancelled';
     progress?: number;
+    farmerPhone?: string;
+    farmerName?: string;
+    farmerId?: string;
+    buyerEmail?: string;
+    aiRoute?: string;
+    estimatedDelivery?: string;
+    transporterId?: string;
+    transporterName?: string;
+    paymentStatus?: string;
+    review?: { rating: number; comment: string; reviewedBy: string; reviewedAt: string } | null;
 }
 
 const RetailerLogistics: React.FC = () => {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [requests, setRequests] = useState<LogisticsRequest[]>([]);
     const [loading, setLoading] = useState(false);
     const [selectedRequest, setSelectedRequest] = useState<LogisticsRequest | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [showPayment, setShowPayment] = useState(false);
 
     const [activePicker, setActivePicker] = useState<'none' | 'fromLocation' | 'toLocation'>('none');
 
-    const [formData, setFormData] = useState<Omit<LogisticsRequest, 'id' | 'status' | 'progress'>>({
+    const [formData, setFormData] = useState({
         cropType: '',
         quantity: 0,
         fromLocation: '',
         toLocation: '',
-        requestedDate: ''
+        requestedDate: '',
+        farmerPhone: '',
+        buyerEmail: ''
     });
 
     const [coords, setCoords] = useState<{ from: [number, number] | null; to: [number, number] | null }>({
@@ -56,23 +72,42 @@ const RetailerLogistics: React.FC = () => {
     }, [requests, selectedRequest]);
 
     const fetchRequests = useCallback(async () => {
-        if (!user) return;
+        if (!user || !token) return;
         try {
-            const res = await fetch('http://localhost:3000/logistics', {
-                headers: { Authorization: `Bearer ${user?.id}` },
+            const res = await fetch('http://localhost:3000/logistics/my', {
+                headers: { Authorization: `Bearer ${token}` },
                 cache: 'no-store'
             });
             if (res.ok) setRequests(await res.json());
         } catch (error) {
             console.error("Failed to fetch requests", error);
         }
-    }, [user]);
+    }, [user, token]);
 
     useEffect(() => {
         fetchRequests();
-        const interval = setInterval(fetchRequests, 2000);
-        return () => clearInterval(interval);
     }, [fetchRequests]);
+
+    // ─── NEW: WebSocket live tracking (replaces old setInterval polling) ───
+    const shipmentIds = useMemo(() => requests.map(r => r.id), [requests]);
+    const { liveUpdates, connected: wsConnected } = useShipmentTracking(shipmentIds);
+
+    // Merge live WebSocket updates into the requests state
+    useEffect(() => {
+        if (liveUpdates.size === 0) return;
+        setRequests(prev => {
+            let changed = false;
+            const next = prev.map(req => {
+                const update = liveUpdates.get(req.id);
+                if (update) {
+                    changed = true;
+                    return { ...req, ...update } as LogisticsRequest;
+                }
+                return req;
+            });
+            return changed ? next : prev;
+        });
+    }, [liveUpdates]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -80,14 +115,14 @@ const RetailerLogistics: React.FC = () => {
         try {
             const res = await fetch('http://localhost:3000/logistics', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.id}` },
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify(formData)
             });
             if (res.ok) {
                 const newReq = await res.json();
                 setRequests([newReq, ...requests]);
                 setSelectedRequest(newReq);
-                setFormData({ cropType: '', quantity: 0, fromLocation: '', toLocation: '', requestedDate: '' });
+                setFormData({ cropType: '', quantity: 0, fromLocation: '', toLocation: '', requestedDate: '', farmerPhone: '', buyerEmail: '' });
                 setShowForm(false);
             }
         } catch (error) {
@@ -216,6 +251,28 @@ const RetailerLogistics: React.FC = () => {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Payment Status Badge */}
+                                {req.paymentStatus && (
+                                    <div className="mt-3 flex items-center gap-1.5">
+                                        <CreditCard size={10} className={req.paymentStatus === 'BUYER_PAYMENT_DONE' || req.paymentStatus === 'FARMER_NOTIFIED' ? 'text-green-500' : 'text-gray-400'} />
+                                        <span className={`text-[9px] font-bold uppercase tracking-wider ${
+                                            req.paymentStatus === 'BUYER_PAYMENT_DONE' || req.paymentStatus === 'FARMER_NOTIFIED'
+                                                ? 'text-green-600' : req.paymentStatus === 'REFUND_INITIATED' ? 'text-orange-500' : 'text-gray-400'
+                                        }`}>
+                                            {req.paymentStatus === 'BUYER_PAYMENT_DONE' ? '✓ Paid'
+                                                : req.paymentStatus === 'FARMER_NOTIFIED' ? '✓ Paid · Farmer Notified'
+                                                : req.paymentStatus === 'REFUND_INITIATED' ? '↩ Refund Initiated'
+                                                : req.paymentStatus}
+                                        </span>
+                                    </div>
+                                )}
+                                {!req.paymentStatus && (req.status === 'accepted' || req.status === 'pending') && (
+                                    <div className="mt-3 flex items-center gap-1.5">
+                                        <CreditCard size={10} className="text-amber-500" />
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-600">Freight Unpaid</span>
+                                    </div>
+                                )}
                             </div>
                         ))
                     )}
@@ -277,8 +334,11 @@ const RetailerLogistics: React.FC = () => {
                         <div className="text-right">
                             <p className="text-[10px] font-bold text-gray-400 uppercase">Order Tracking</p>
                             <div className="flex items-center gap-2 justify-end mt-0.5">
-                                <div className="w-2 h-2 rounded-full bg-brand-green animate-pulse"></div>
-                                <span className="text-xs font-bold text-brand-green uppercase tracking-tighter">Live Status</span>
+                                <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-brand-green animate-pulse' : 'bg-red-400'}`}></div>
+                                <span className={`text-xs font-bold uppercase tracking-tighter ${wsConnected ? 'text-brand-green' : 'text-red-400'}`}>
+                                    {wsConnected ? 'Live Status' : 'Connecting...'}
+                                </span>
+                                {wsConnected ? <Wifi size={12} className="text-brand-green" /> : <WifiOff size={12} className="text-red-400" />}
                             </div>
                         </div>
                     </div>
@@ -287,39 +347,75 @@ const RetailerLogistics: React.FC = () => {
                 {/* Overlay: Bottom Details Panel */}
                 {selectedRequest && (
                     <div className="absolute bottom-6 left-6 right-6 pointer-events-none z-[1100]">
-                        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-[32px] p-6 flex flex-col md:flex-row md:items-center justify-between pointer-events-auto shadow-2xl max-w-5xl mx-auto border-t-2 border-t-brand-green/30">
-                            <div className="flex items-center gap-5 mb-4 md:mb-0">
-                                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-gray-100">
-                                    <ShoppingBag className="text-brand-green" size={32} />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-3">
-                                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900">{selectedRequest.cropType}</h2>
-                                        <StatusBadge status={selectedRequest.status} large />
+                        <div className="bg-white/90 backdrop-blur-xl border border-gray-200 rounded-[32px] p-6 pointer-events-auto shadow-2xl max-w-5xl mx-auto border-t-2 border-t-brand-green/30">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between">
+                                <div className="flex items-center gap-5 mb-4 md:mb-0">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner border border-gray-100">
+                                        <ShoppingBag className="text-brand-green" size={32} />
                                     </div>
-                                    <p className="text-gray-500 text-sm mt-1 font-medium flex items-center gap-2">
-                                        ORDER ID: <span className="text-gray-900 font-bold tracking-tighter">{selectedRequest.id.split('-')[0].toUpperCase()}</span>
-                                    </p>
+                                    <div>
+                                        <div className="flex items-center gap-3">
+                                            <h2 className="text-2xl font-black uppercase tracking-tight text-gray-900">{selectedRequest.cropType}</h2>
+                                            <StatusBadge status={selectedRequest.status} large />
+                                        </div>
+                                        <p className="text-gray-500 text-sm mt-1 font-medium flex items-center gap-2">
+                                            ORDER ID: <span className="text-gray-900 font-bold tracking-tighter">{selectedRequest.id.split('-')[0].toUpperCase()}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-8">
+                                    <div className="text-center">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Weight</p>
+                                        <p className="text-xl font-black text-gray-900">{selectedRequest.quantity} <span className="text-xs text-gray-400">KG</span></p>
+                                    </div>
+                                    <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
+                                    <div className="text-center">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pick Up From</p>
+                                        <p className="text-xl font-black text-brand-green uppercase tracking-tighter">{selectedRequest.fromLocation}</p>
+                                    </div>
+                                    <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
+                                    <div className="flex flex-col gap-2">
+                                        {/* Pay Freight button — shown when accepted/pending and not yet paid */}
+                                        {(selectedRequest.status === 'accepted' || selectedRequest.status === 'pending') && !selectedRequest.paymentStatus && (
+                                            <button
+                                                onClick={() => setShowPayment(true)}
+                                                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-lg shadow-green-600/20 flex items-center gap-2"
+                                            >
+                                                <CreditCard size={14} />
+                                                Pay Freight
+                                            </button>
+                                        )}
+                                        {/* Paid badge */}
+                                        {selectedRequest.paymentStatus && (selectedRequest.paymentStatus === 'BUYER_PAYMENT_DONE' || selectedRequest.paymentStatus === 'FARMER_NOTIFIED') && (
+                                            <div className="bg-green-50 border border-green-200 text-green-700 text-[10px] font-black uppercase tracking-[0.15em] px-5 py-2.5 rounded-xl flex items-center gap-2">
+                                                <CheckCircle size={14} />
+                                                Freight Paid
+                                            </div>
+                                        )}
+                                        <button className="bg-brand-green text-white text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-lg shadow-brand-green/20">
+                                            Track Live
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-8">
-                                <div className="text-center">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Weight</p>
-                                    <p className="text-xl font-black text-gray-900">{selectedRequest.quantity} <span className="text-xs text-gray-400">KG</span></p>
+                            {/* AI Route & ETA bar */}
+                            {(selectedRequest.aiRoute || selectedRequest.estimatedDelivery) && (
+                                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4 text-[11px]">
+                                    {selectedRequest.aiRoute && selectedRequest.aiRoute !== 'Route optimization unavailable' && (
+                                        <div className="flex items-center gap-2 text-gray-500 flex-1">
+                                            <Navigation size={12} className="text-brand-green shrink-0" />
+                                            <span className="truncate"><strong className="text-gray-700">AI Route:</strong> {selectedRequest.aiRoute}</span>
+                                        </div>
+                                    )}
+                                    {selectedRequest.estimatedDelivery && (
+                                        <div className="flex items-center gap-1.5 text-blue-500 font-bold shrink-0">
+                                            <Clock size={12} /> ETA: {selectedRequest.estimatedDelivery}
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
-                                <div className="text-center">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pick Up From</p>
-                                    <p className="text-xl font-black text-brand-green uppercase tracking-tighter">{selectedRequest.fromLocation}</p>
-                                </div>
-                                <div className="w-px h-10 bg-gray-100 hidden md:block"></div>
-                                <div className="flex flex-col gap-2">
-                                    <button className="bg-brand-green text-white text-[10px] font-black uppercase tracking-[0.2em] px-5 py-2.5 rounded-xl hover:scale-105 transition-all shadow-lg shadow-brand-green/20">
-                                        Track Live
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -412,6 +508,41 @@ const RetailerLogistics: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Notification Contact Info */}
+                            <div className="bg-gradient-to-r from-blue-50 to-brand-green/5 p-5 rounded-2xl border border-blue-100/50">
+                                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                    <Mail size={12} /> Notification Contacts (Optional)
+                                </p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Your Phone</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
+                                            <input
+                                                type="tel"
+                                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                                                placeholder="+91..."
+                                                value={formData.farmerPhone}
+                                                onChange={e => setFormData({ ...formData, farmerPhone: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Buyer Email</label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300" size={14} />
+                                            <input
+                                                type="email"
+                                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-green outline-none transition-all placeholder:text-gray-300"
+                                                placeholder="buyer@email.com"
+                                                value={formData.buyerEmail}
+                                                onChange={e => setFormData({ ...formData, buyerEmail: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button
                                 type="submit"
                                 disabled={loading}
@@ -426,6 +557,37 @@ const RetailerLogistics: React.FC = () => {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* ── Shipment Payment Checkout Modal ── */}
+            {showPayment && selectedRequest && (
+                <ShipmentCheckoutModal
+                    shipment={{
+                        id: selectedRequest.id,
+                        trackingId: selectedRequest.trackingId,
+                        cropType: selectedRequest.cropType,
+                        quantity: selectedRequest.quantity,
+                        fromLocation: selectedRequest.fromLocation,
+                        toLocation: selectedRequest.toLocation,
+                        freightAmount: Math.round(selectedRequest.quantity * 8), // ₹8/kg base freight rate
+                        farmerId: selectedRequest.farmerId,
+                        farmerName: selectedRequest.farmerName,
+                        farmerPhone: selectedRequest.farmerPhone,
+                        transporterId: selectedRequest.transporterId,
+                        transporterName: selectedRequest.transporterName,
+                    }}
+                    buyerName={user?.name || ''}
+                    buyerPhone={''}
+                    buyerEmail={''}
+                    userRole="buyer"
+                    onClose={() => setShowPayment(false)}
+                    onPaymentComplete={(shipmentId, paymentId) => {
+                        console.log('✅ Freight paid:', shipmentId, paymentId);
+                        setShowPayment(false);
+                        // Refresh shipments to get updated payment status
+                        fetchRequests();
+                    }}
+                />
             )}
 
             <style>{`

@@ -1,4 +1,4 @@
-import { Send, Bot, Globe, Search, Plus, Bookmark, Star, Trash2, Users, MoreHorizontal, MessageSquare, Paperclip, Edit2, Check, X, Download, Copy, RefreshCw } from "lucide-react";
+import { Send, Bot, Search, Plus, Bookmark, Star, Trash2, Users, MoreHorizontal, MessageSquare, Paperclip, Edit2, Check, X, Download, Copy, RefreshCw } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import ReactMarkdown from 'react-markdown';
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -36,7 +36,7 @@ const AIAdvisor = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:3000'; // Correctly target backend
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   // Auto-scroll
   const scrollToBottom = () => {
@@ -86,7 +86,6 @@ const AIAdvisor = () => {
           imageUrl: m.imageUrl ? (m.imageUrl.startsWith('blob:') ? m.imageUrl : `${API}${m.imageUrl}`) : undefined,
           cropDetected: m.cropDetected,
           diseaseDetected: m.diseaseDetected,
-          confidence: m.confidence,
           timestamp: m.createdAt,
         }));
         setMessages(formatted);
@@ -104,7 +103,6 @@ const AIAdvisor = () => {
     if (chatId) {
       fetchMessages(chatId);
     } else {
-      // Default welcome message when no chat is selected
       setMessages([{
         id: "1", type: "ai", content: "👋 नमस्ते! I am AgriBot. How can I help you today?", timestamp: new Date().toISOString()
       }]);
@@ -114,7 +112,6 @@ const AIAdvisor = () => {
   // 📡 API: Update Topic (Status, Category, Title)
   const updateTopic = async (id: string, updates: any) => {
     if (!token) return;
-    // Optimistic UI Update
     setAllChats(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
 
     try {
@@ -124,7 +121,6 @@ const AIAdvisor = () => {
         body: JSON.stringify(updates)
       });
       if (!res.ok) {
-        // Revert on failure
         fetchTopics();
         toast.error('Failed to update chat');
       }
@@ -150,6 +146,20 @@ const AIAdvisor = () => {
     } catch (err) {
       toast.error('Failed to delete chat');
     }
+  };
+
+  // Rename handlers
+  const startRename = (id: string, title: string) => {
+    setEditingTopicId(id);
+    setEditingTitle(title);
+  };
+
+  const saveRename = (id: string) => {
+    if (editingTitle.trim()) {
+      updateTopic(id, { title: editingTitle.trim() });
+      toast.success('Chat renamed');
+    }
+    setEditingTopicId(null);
   };
 
   // Toggles Hook
@@ -214,7 +224,7 @@ const AIAdvisor = () => {
 
       const res = await fetch(`${API}/chat`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }, // FormData automatically sets correct Content-Type with boundary
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -225,7 +235,6 @@ const AIAdvisor = () => {
         ...m,
         cropDetected: data.mlData?.crop,
         diseaseDetected: data.mlData?.disease,
-        confidence: data.mlData?.confidence,
         imageUrl: data.mlData?.imageUrl ? `${API}${data.mlData.imageUrl}` : m.imageUrl
       } : m));
 
@@ -233,13 +242,12 @@ const AIAdvisor = () => {
       setMessages(prev => [...prev, aiMsg]);
       setIsTyping(false);
 
-      // If this was a new chat, data.topicId will be returned. Update URL and refetch topics
       if (!chatId && data.topicId) {
         toast.success("New chat created");
         fetchTopics();
         navigate(`/advisor/chat/${data.topicId}`, { replace: true });
       } else {
-        fetchTopics(); // Refresh updated at timestamps
+        fetchTopics();
       }
 
     } catch (err) {
@@ -279,7 +287,7 @@ const AIAdvisor = () => {
       currentY += 6;
 
       doc.setFont("helvetica", "normal");
-      const splitText = doc.splitTextToSize(msg.content.replace(/[*_]/g, ""), 180); // basic markdown strip
+      const splitText = doc.splitTextToSize(msg.content.replace(/[*_]/g, ""), 180);
       doc.text(splitText, 14, currentY);
       currentY += (splitText.length * 5) + 8;
     });
@@ -302,7 +310,7 @@ const AIAdvisor = () => {
     if (activeTab === 'bookmarks') return chat.isBookmarked && chat.status !== 'trash' && matchesSearch;
     if (activeTab === 'favorites') return chat.isFavorite && chat.status !== 'trash' && matchesSearch;
     if (activeTab === 'trash') return chat.status === 'trash' && matchesSearch;
-    return chat.status !== 'trash' && matchesSearch; // 'chat' active tab
+    return chat.status !== 'trash' && matchesSearch;
   });
 
   const counts = {
@@ -414,7 +422,6 @@ const AIAdvisor = () => {
                     <MessageSquare size={16} />
                   </div>
                   <div className="flex-1 min-w-0 pr-4">
-                    {/* Inline Editing */}
                     {editingTopicId === topic.id ? (
                       <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                         <input
@@ -464,10 +471,9 @@ const AIAdvisor = () => {
               </div>
             )}
           </div>
-
         </div>
 
-        {/* New Chat Button glued to bottom of middle sidebar */}
+        {/* New Chat Button */}
         <div className="p-4 border-t border-gray-100 bg-gray-50">
           <button
             onClick={() => navigate('/advisor/chat')}
@@ -500,7 +506,6 @@ const AIAdvisor = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Action Bar for Active Chat */}
             {currentTopic && (
               <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-2xl border border-gray-100 mr-2">
                 <button
@@ -576,9 +581,9 @@ const AIAdvisor = () => {
                     {msg.imageUrl && (
                       <div className="mb-4">
                         <img src={msg.imageUrl} alt="Uploaded crop" className="max-w-xs rounded-xl shadow-sm border border-white/20" />
-                        {msg.cropDetected && msg.diseaseDetected && msg.confidence && (
+                        {msg.cropDetected && msg.diseaseDetected && (
                           <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/20 shadow-sm text-white text-[11px] font-bold uppercase tracking-wider">
-                            🔴 {msg.cropDetected} {msg.diseaseDetected} — {msg.confidence}
+                            🔴 {msg.cropDetected} {msg.diseaseDetected}
                           </div>
                         )}
                       </div>

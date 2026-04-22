@@ -4,6 +4,8 @@ import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import AddCropModal from '../components/AddCropModal';
 import BidModal from '../components/BidModal';
+import MyListingsModal from '../components/MyListingsModal';
+import BuyerTradesModal from '../components/BuyerTradesModal';
 import CropImage from '../components/CropImage';
 
 /* ============================================================
@@ -24,6 +26,8 @@ const Marketplace: React.FC = () => {
   const { crops, error, clearError } = useData();
   const { user, isAuthenticated } = useAuth();
   const [showAddCrop, setShowAddCrop] = useState(false);
+  const [showMyListings, setShowMyListings] = useState(false);
+  const [showBuyerTrades, setShowBuyerTrades] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'expired'>('all');
@@ -138,12 +142,36 @@ const Marketplace: React.FC = () => {
               </div>
 
               {isAuthenticated && user?.type === 'farmer' && (
-                <button
-                  onClick={() => setShowAddCrop(true)}
-                  className="bg-brand-green text-white pl-4 pr-5 py-2.5 rounded-xl font-semibold hover:bg-brand-green-dark transition-all flex items-center gap-2 text-sm whitespace-nowrap"
-                >
-                  <Plus className="h-4 w-4" /> List Crop
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowMyListings(true)}
+                    className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                  >
+                    📋 My Listings
+                  </button>
+                  <button
+                    onClick={() => setShowAddCrop(true)}
+                    className="bg-brand-green text-white pl-4 pr-5 py-2.5 rounded-xl font-semibold hover:bg-brand-green-dark transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                  >
+                    <Plus className="h-4 w-4" /> List Crop
+                  </button>
+                </div>
+              )}
+              {isAuthenticated && user?.type !== 'farmer' && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowBuyerTrades(true)}
+                    className="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-orange-700 transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                  >
+                    📦 My Trades
+                  </button>
+                  <button
+                    onClick={() => setShowAddCrop(true)}
+                    className="bg-brand-green text-white pl-4 pr-5 py-2.5 rounded-xl font-semibold hover:bg-brand-green-dark transition-all flex items-center gap-2 text-sm whitespace-nowrap"
+                  >
+                    <Plus className="h-4 w-4" /> List Crop
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -441,6 +469,8 @@ const Marketplace: React.FC = () => {
       {/* ── Modals ── */}
       {showAddCrop && <AddCropModal onClose={() => setShowAddCrop(false)} />}
       {selectedCrop && <BidModal cropId={selectedCrop} onClose={() => setSelectedCrop(null)} />}
+      <MyListingsModal isOpen={showMyListings} onClose={() => setShowMyListings(false)} />
+      <BuyerTradesModal isOpen={showBuyerTrades} onClose={() => setShowBuyerTrades(false)} />
     </div>
   );
 };
